@@ -98,8 +98,8 @@ const YD_TOKEN_ABI = [
 ] as const
 
 // 合约地址 - 请替换为你的实际合约地址
-const COURSE_PLATFORM_CONTRACT = import.meta.env.VITE_COURSE_PLATFORM_ADDRESS as `0x${string}` // 替换为你的课程平台合约地址
-const YD_TOKEN_CONTRACT = import.meta.env.VITE_YD_TOKEN_ADDRESS as `0x${string}` // 替换为你的YD代币合约地址
+const COURSE_PLATFORM_CONTRACT = import.meta.env.VITE_COURSE_PLATFORM_ADDRESS as `0x${string}`
+const YD_TOKEN_CONTRACT = import.meta.env.VITE_YD_TOKEN_ADDRESS as `0x${string}`
 
 interface Course {
   id: bigint
@@ -117,31 +117,33 @@ export function CoursePlatform() {
   const { address, isConnected } = useAccount()
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
   const [isApproving, setIsApproving] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [viewingContent, setViewingContent] = useState<Course | null>(null)
 
-  // 读取所有活跃课程
+  // 读取所有活跃课程 - 添加刷新间隔
   const { data: courses, refetch: refetchCourses } = useReadContract({
     address: COURSE_PLATFORM_CONTRACT,
     abi: COURSE_PLATFORM_ABI,
     functionName: 'getAllActiveCourses',
   })
 
-  // 读取用户购买的课程
-  const { data: userCourses } = useReadContract({
+  // 读取用户购买的课程 - 添加刷新间隔
+  const { data: userCourses, refetch: refetchUserCourses } = useReadContract({
     address: COURSE_PLATFORM_CONTRACT,
     abi: COURSE_PLATFORM_ABI,
     functionName: 'getUserCourses',
     args: address ? [address] : undefined,
   })
 
-  // 读取平台统计
-  const { data: platformStats } = useReadContract({
+  // 读取平台统计 - 添加刷新间隔
+  const { data: platformStats, refetch: refetchPlatformStats } = useReadContract({
     address: COURSE_PLATFORM_CONTRACT,
     abi: COURSE_PLATFORM_ABI,
     functionName: 'getPlatformStats',
   })
 
   // 读取用户YD代币余额
-  const { data: userYDBalance } = useReadContract({
+  const { data: userYDBalance, refetch: refetchBalance } = useReadContract({
     address: YD_TOKEN_CONTRACT,
     abi: YD_TOKEN_ABI,
     functionName: 'balanceOf',
@@ -179,12 +181,23 @@ export function CoursePlatform() {
   }
 
   // 检查用户授权额度
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: YD_TOKEN_CONTRACT,
     abi: YD_TOKEN_ABI,
     functionName: 'allowance',
     args: address && selectedCourse ? [address, COURSE_PLATFORM_CONTRACT] : undefined,
   })
+
+  // 刷新所有数据
+  const refreshAllData = async () => {
+    await Promise.all([
+      refetchCourses(),
+      refetchUserCourses(), 
+      refetchPlatformStats(),
+      refetchBalance(),
+      refetchAllowance()
+    ])
+  }
 
   // 授权YD代币
   const handleApprove = async (course: Course) => {
@@ -192,6 +205,7 @@ export function CoursePlatform() {
     
     try {
       setIsApproving(true)
+      setSelectedCourse(course)
       approveContract({
         address: YD_TOKEN_CONTRACT,
         abi: YD_TOKEN_ABI,
@@ -200,7 +214,6 @@ export function CoursePlatform() {
       })
     } catch (error) {
       console.error('Approve failed:', error)
-    } finally {
       setIsApproving(false)
     }
   }
@@ -216,6 +229,7 @@ export function CoursePlatform() {
     }
 
     try {
+      setSelectedCourse(course)
       purchaseContract({
         address: COURSE_PLATFORM_CONTRACT,
         abi: COURSE_PLATFORM_ABI,
@@ -224,6 +238,31 @@ export function CoursePlatform() {
       })
     } catch (error) {
       console.error('Purchase failed:', error)
+    }
+  }
+
+  // 查看课程内容
+  const handleViewContent = async (course: Course) => {
+    try {
+      // 这里实现内容查看逻辑
+      // 如果是 IPFS 哈希，可以通过 IPFS 网关访问
+      if (course.contentHash) {
+        // 方法1: 直接通过 IPFS 网关打开
+        const ipfsUrl = `https://ipfs.io/ipfs/${course.contentHash}`
+        
+        // 方法2: 如果是 PDF，在新窗口打开
+        if (course.description.toLowerCase().includes('pdf') || course.title.toLowerCase().includes('pdf')) {
+          window.open(ipfsUrl, '_blank')
+        } else {
+          // 方法3: 如果是视频或其他内容，设置查看状态
+          setViewingContent(course)
+        }
+      } else {
+        alert('课程内容暂时无法访问')
+      }
+    } catch (error) {
+      console.error('Failed to view content:', error)
+      alert('内容加载失败')
     }
   }
 
@@ -242,7 +281,12 @@ export function CoursePlatform() {
     if (!isConnected) return { text: '连接钱包', disabled: false, onClick: () => {} }
     
     if (checkUserOwnsCourse(course.id)) {
-      return { text: '已购买', disabled: true, onClick: () => {} }
+      return { 
+        text: '查看内容', 
+        disabled: false, 
+        onClick: () => handleViewContent(course),
+        className: 'owned'
+      }
     }
 
     if (!userYDBalance || userYDBalance < course.price) {
@@ -264,12 +308,34 @@ export function CoursePlatform() {
     }
   }
 
-  // 重新获取数据
+  // 处理授权成功
+  useEffect(() => {
+    if (isApproveConfirmed && selectedCourse) {
+      setIsApproving(false)
+      // 授权成功后自动进行购买
+      setTimeout(() => {
+        handlePurchase(selectedCourse)
+      }, 1000)
+    }
+  }, [isApproveConfirmed, selectedCourse])
+
+  // 处理购买成功
   useEffect(() => {
     if (isPurchaseConfirmed) {
-      refetchCourses()
+      setSuccessMessage('🎉 课程购买成功！')
+      setSelectedCourse(null)
+      
+      // 购买成功后刷新所有数据
+      setTimeout(() => {
+        refreshAllData()
+      }, 2000)
+
+      // 3秒后清除成功消息
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 3000)
     }
-  }, [isPurchaseConfirmed, refetchCourses])
+  }, [isPurchaseConfirmed])
 
   if (!isConnected) {
     return (
@@ -288,19 +354,19 @@ export function CoursePlatform() {
       {platformStats && (
         <div className="platform-stats">
           <div className="stat-card">
-            <h3>📚 总课程数</h3>
+            <h2>📚 总课程数</h2>
             <p>{Number(platformStats[0])}</p>
           </div>
           <div className="stat-card">
-            <h3>✅ 活跃课程</h3>
+            <h2>✅ 活跃课程</h2>
             <p>{Number(platformStats[1])}</p>
           </div>
           <div className="stat-card">
-            <h3>💰 总销售量</h3>
+            <h2>💰 总销售量</h2>
             <p>{Number(platformStats[2])}</p>
           </div>
           <div className="stat-card">
-            <h3>🪙 我的YD余额</h3>
+            <h2>🪙 我的YD余额</h2>
             <p>{userYDBalance ? formatPrice(userYDBalance) : '0'}</p>
           </div>
         </div>
@@ -315,58 +381,70 @@ export function CoursePlatform() {
       {/* 课程列表 */}
       <div className="courses-grid">
         {courses && courses.length > 0 ? (
-          courses.map((course: Course) => (
-            <div key={Number(course.id)} className="course-card">
-              <div className="course-header">
-                <h3>{course.title}</h3>
-                <div className="course-price">
-                  {formatPrice(course.price)} YD
+          courses.map((course: Course) => {
+            const isOwned = checkUserOwnsCourse(course.id)
+            return (
+              <div key={Number(course.id)} className="course-card">
+                <div className="course-header">
+                  <h3>{course.title}</h3>
+                  <div className="course-price">
+                    {formatPrice(course.price)} YD
+                  </div>
                 </div>
-              </div>
-              
-              <div className="course-content">
-                <p className="course-description">{course.description}</p>
                 
-                <div className="course-meta">
-                  <div className="meta-item">
-                    <span className="meta-label">讲师:</span>
-                    <span className="meta-value">
-                      {course.instructor.slice(0, 6)}...{course.instructor.slice(-4)}
-                    </span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">创建时间:</span>
-                    <span className="meta-value">{formatDate(course.createdAt)}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">销售量:</span>
-                    <span className="meta-value">{Number(course.totalSales)}</span>
+                <div className="course-content">
+                  <p className="course-description">{course.description}</p>
+                  
+                  <div className="course-meta">
+                    <div className="meta-item">
+                      <span className="meta-label">讲师:</span>
+                      <span className="meta-value">
+                        {course.instructor.slice(0, 6)}...{course.instructor.slice(-4)}
+                      </span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-label">创建时间:</span>
+                      <span className="meta-value">{formatDate(course.createdAt)}</span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-label">销售量:</span>
+                      <span className="meta-value">{Number(course.totalSales)}</span>
+                    </div>
+                    {course.contentHash && (
+                      <div className="meta-item">
+                        <span className="meta-label">内容类型:</span>
+                        <span className="meta-value">
+                          {course.description.toLowerCase().includes('pdf') ? 'PDF文档' : 
+                           course.description.toLowerCase().includes('video') ? '视频课程' : '数字内容'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              <div className="course-footer">
-                {(() => {
-                  const buttonState = getButtonState(course)
-                  return (
-                    <button 
-                      className={`course-button ${checkUserOwnsCourse(course.id) ? 'owned' : ''}`}
-                      onClick={buttonState.onClick}
-                      disabled={buttonState.disabled}
-                    >
-                      {buttonState.text}
-                    </button>
-                  )
-                })()}
-              </div>
-
-              {checkUserOwnsCourse(course.id) && (
-                <div className="owned-badge">
-                  ✅ 已拥有
+                <div className="course-footer">
+                  {(() => {
+                    const buttonState = getButtonState(course)
+                    return (
+                      <button 
+                        className={`course-button ${buttonState.className || ''}`}
+                        onClick={buttonState.onClick}
+                        disabled={buttonState.disabled}
+                      >
+                        {buttonState.text}
+                      </button>
+                    )
+                  })()}
                 </div>
-              )}
-            </div>
-          ))
+
+                {isOwned && (
+                  <div className="owned-badge">
+                    ✅ 已拥有
+                  </div>
+                )}
+              </div>
+            )
+          })
         ) : (
           <div className="no-courses">
             <h3>暂无可购买课程</h3>
@@ -386,12 +464,40 @@ export function CoursePlatform() {
                 <div key={Number(courseId)} className="my-course-item">
                   <h4>{course.title}</h4>
                   <p>购买价格: {formatPrice(course.price)} YD</p>
-                  <button className="access-button">
-                    进入学习
+                  <p>内容哈希: {course.contentHash.slice(0, 10)}...</p>
+                  <button 
+                    className="access-button"
+                    onClick={() => handleViewContent(course)}
+                  >
+                    查看内容
                   </button>
                 </div>
               ) : null
             })}
+          </div>
+        </div>
+      )}
+
+      {/* 内容查看器 */}
+      {viewingContent && (
+        <div className="content-viewer-overlay" onClick={() => setViewingContent(null)}>
+          <div className="content-viewer" onClick={(e) => e.stopPropagation()}>
+            <div className="content-header">
+              <h3>{viewingContent.title}</h3>
+              <button onClick={() => setViewingContent(null)}>✕</button>
+            </div>
+            <div className="content-body">
+              {viewingContent.contentHash ? (
+                <iframe 
+                  src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`}
+                  width="100%" 
+                  height="500px"
+                  title={viewingContent.title}
+                />
+              ) : (
+                <p>内容加载中...</p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -403,9 +509,9 @@ export function CoursePlatform() {
         </div>
       )}
 
-      {isPurchaseConfirmed && (
+      {successMessage && (
         <div className="success-message">
-          🎉 课程购买成功！
+          {successMessage}
         </div>
       )}
     </div>

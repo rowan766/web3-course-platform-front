@@ -1,0 +1,409 @@
+.contract-section {
+          margin: 30px 0;
+          padding: 30px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 20px;
+          color: white;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .section-title {
+          text-align: center;
+          margin: 0 0 30px 0;
+          font-size: 2rem;
+          font-weight: bold;
+          color: #4ecdc4;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .connect-prompt {
+          text-align: center;
+          padding: 40px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          backdrop-filter: blur(10px);
+        }
+
+        .contract-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+          gap: 25px;
+        }
+
+        .contract-card {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 16px;
+          padding: 25px;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .contract-card:hover {
+          transform: translateY(-5px);
+          background: rgba(255, 255, 255, 0.15);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .contract-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1);
+        }
+
+        .card-header {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+
+        .card-icon {
+          font-size: 2.5rem;
+          margin-bottom: 10px;
+        }
+
+        .card-header h3 {
+          margin: 0 0 8px 0;
+          font-size: 1.3rem;
+          font-weight: 600;
+          color: #4ecdc4;
+        }
+
+        .card-header p {
+          margin: 0;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 0.9rem;
+        }
+
+        .contract-info, .status-grid, .user-status {
+          margin-bottom: 20px;
+        }
+
+        .info-item, .status-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 10px 0;
+          padding: 8px 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-label, .status-label {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.8);
+        }
+
+        .info-value {
+          font-family: 'Courier New', monospace;
+          font-size: 0.8rem;
+          color: #4ecdc4;
+          background: rgba(255, 255, 255, 0.1);
+          padding: 2px 6px;
+          border-radius: 3px;
+          word-break: break-all;
+        }
+
+        .balance-value, .status-value, .amount-received {
+          font-weight: 600;
+          color: #4ecdc4;
+        }
+
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+
+        .status-badge.success {
+          background: rgba(76, 175, 80, 0.2);
+          color: #4caf50;
+          border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .status-badge.pending {
+          background: rgba(255, 193, 7, 0.2);
+          color: #ffc107;
+          border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .status-badge.grabbed {
+          background: rgba(244, 67, 54, 0.2);
+          color: #f44336;
+          border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .status-badge.available {
+          background: rgba(76, 175, 80, 0.2);
+          color: #4caf50;
+          border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .input-section {
+          margin-bottom: 20px;
+        }
+
+        .input-group {
+          margin-bottom: 15px;
+        }
+
+        .input-label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 0.9rem;
+        }
+
+        .contract-input {
+          width: 100%;
+          padding: 12px 16px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 8px;
+          color: white;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          box-sizing: border-box;
+        }
+
+        .contract-input::placeholder {
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .contract-input:focus {
+          outline: none;
+          border-color: #4ecdc4;
+          background: rgba(255, 255, 255, 0.15);
+          box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+        }
+
+        .action-button {
+          width: 100%;
+          padding: 14px 20px;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          margin-top: 10px;
+        }
+
+        .action-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .action-button.primary {
+          background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+          color: white;
+        }
+
+        .action-button.secondary {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .action-button.grab {
+          background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+          color: white;
+        }
+
+        .action-button.warning {
+          background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);
+          color: white;
+        }
+
+        .grab-card {
+          border-left: 4px solid #ff6b6b;
+        }
+
+        .grab-card::before {
+          background: linear-gradient(90deg, #ff6b6b, #ff6b6b, #ff6b6b);
+        }
+
+        .user-card {
+          border-left: 4px solid #4ecdc4;
+        }
+
+        .user-card::before {
+          background: linear-gradient(90deg, #4ecdc4, #4ecdc4, #4ecdc4);
+        }
+
+        .withdraw-card {
+          border-left: 4px solid #ffa726;
+        }
+
+        .withdraw-card::before {
+          background: linear-gradient(90deg, #ffa726, #ffa726, #ffa726);
+        }
+
+        .grab-info, .withdraw-info {
+          margin-bottom: 20px;
+          padding: 15px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+        }
+
+        .grab-info p, .withdraw-info p {
+          margin: 5px 0;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .query-result {
+          margin-top: 15px;
+          padding: 10px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 6px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .result-label {
+          color: rgba(255, 255, 255, 0.8);
+        }
+
+        .result-value {
+          font-weight: 600;
+          color: #4ecdc4;
+        }
+
+        .message-card {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          padding: 20px;
+          border-radius: 12px;
+          margin: 20px 0;
+          animation: slideIn 0.5s ease;
+        }
+
+        .message-card.transaction {
+          background: rgba(33, 150, 243, 0.1);
+          border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+
+        .message-card.error {
+          background: rgba(244, 67, 54, 0.1);
+          border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .message-card.success {
+          background: rgba(76, 175, 80, 0.1);
+          border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .message-icon {
+          font-size: 1.5rem;
+        }
+
+        .message-content h4 {
+          margin: 0 0 8px 0;
+          font-size: 1.1rem;
+          color: white;
+        }
+
+        .message-content p {
+          margin: 5px 0;
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .message-content code {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 2px 6px;
+          border-radius: 3px;
+          font-family: 'Courier New', monospace;
+          color: #4ecdc4;
+        }
+
+        .tx-status {
+          margin-left: 10px;
+          font-weight: 600;
+        }
+
+        .tx-status.success {
+          color: #4caf50;
+        }
+
+        .tx-status.pending {
+          color: #ffc107;
+          animation: pulse 2s infinite;
+        }
+
+        .refresh-btn {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          margin-top: 10px;
+          transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.5; }
+          100% { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .contract-section {
+            padding: 20px;
+            margin: 15px;
+          }
+          
+          .contract-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .section-title {
+            font-size: 1.5rem;
+          }
+          
+          .card-header h3 {
+            font-size: 1.1rem;
+          }
+          
+          .contract-card {
+            padding: 20px;
+          }
+          
+          .info-item, .status-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+          }
+        }

@@ -63,6 +63,39 @@ const COURSE_PLATFORM_ABI = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "courseId", "type": "uint256"},
+      {"internalType": "string", "name": "_title", "type": "string"},
+      {"internalType": "string", "name": "_description", "type": "string"},
+      {"internalType": "uint256", "name": "_price", "type": "uint256"}
+    ],
+    "name": "updateCourse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "courseId", "type": "uint256"}],
+    "name": "deactivateCourse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "courseId", "type": "uint256"}],
+    "name": "reactivateCourse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ] as const
 
@@ -119,6 +152,13 @@ export function CoursePlatform() {
   const [isApproving, setIsApproving] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [viewingContent, setViewingContent] = useState<Course | null>(null)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: '',
+    price: ''
+  })
 
   // 读取所有活跃课程 - 添加刷新间隔
   const { data: courses, refetch: refetchCourses } = useReadContract({
@@ -150,6 +190,16 @@ export function CoursePlatform() {
     args: address ? [address] : undefined,
   })
 
+  // 检查是否为合约所有者
+  const { data: contractOwner } = useReadContract({
+    address: COURSE_PLATFORM_CONTRACT,
+    abi: COURSE_PLATFORM_ABI,
+    functionName: 'owner',
+  })
+
+  const isOwner = isConnected && address && contractOwner && 
+                  address.toLowerCase() === contractOwner.toLowerCase()
+
   // 授权YD代币
   const { 
     writeContract: approveContract, 
@@ -165,6 +215,27 @@ export function CoursePlatform() {
     isPending: isPurchasePending 
   } = useWriteContract()
 
+  // 更新课程
+  const { 
+    writeContract: updateContract, 
+    data: updateHash,
+    isPending: isUpdatePending 
+  } = useWriteContract()
+
+  // 停用课程
+  const { 
+    writeContract: deactivateContract, 
+    data: deactivateHash,
+    isPending: isDeactivatePending 
+  } = useWriteContract()
+
+  // 重新激活课程
+  const { 
+    writeContract: reactivateContract, 
+    data: reactivateHash,
+    isPending: isReactivatePending 
+  } = useWriteContract()
+
   // 等待交易确认
   const { isLoading: isApproveConfirming, isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({
     hash: approveHash,
@@ -172,6 +243,18 @@ export function CoursePlatform() {
 
   const { isLoading: isPurchaseConfirming, isSuccess: isPurchaseConfirmed } = useWaitForTransactionReceipt({
     hash: purchaseHash,
+  })
+
+  const { isLoading: isUpdateConfirming, isSuccess: isUpdateConfirmed } = useWaitForTransactionReceipt({
+    hash: updateHash,
+  })
+
+  const { isLoading: isDeactivateConfirming, isSuccess: isDeactivateConfirmed } = useWaitForTransactionReceipt({
+    hash: deactivateHash,
+  })
+
+  const { isLoading: isReactivateConfirming, isSuccess: isReactivateConfirmed } = useWaitForTransactionReceipt({
+    hash: reactivateHash,
   })
 
   // 检查用户是否已购买某个课程
@@ -241,7 +324,77 @@ export function CoursePlatform() {
     }
   }
 
-  // 查看课程内容
+  // 开始编辑课程
+  const handleEditCourse = (course: Course) => {
+    setEditingCourse(course)
+    setEditFormData({
+      title: course.title,
+      description: course.description,
+      price: formatUnits(course.price, 18)
+    })
+    setIsEditMode(true)
+  }
+
+  // 保存编辑
+  const handleSaveEdit = async () => {
+    if (!editingCourse || !isOwner) return
+
+    try {
+      const priceInWei = parseUnits(editFormData.price, 18)
+      updateContract({
+        address: COURSE_PLATFORM_CONTRACT,
+        abi: COURSE_PLATFORM_ABI,
+        functionName: 'updateCourse',
+        args: [
+          editingCourse.id,
+          editFormData.title,
+          editFormData.description,
+          priceInWei
+        ],
+      })
+    } catch (error) {
+      console.error('Update failed:', error)
+    }
+  }
+
+  // 取消编辑
+  const handleCancelEdit = () => {
+    setIsEditMode(false)
+    setEditingCourse(null)
+    setEditFormData({ title: '', description: '', price: '' })
+  }
+
+  // 停用课程
+  const handleDeactivateCourse = async (courseId: bigint) => {
+    if (!isOwner) return
+    
+    try {
+      deactivateContract({
+        address: COURSE_PLATFORM_CONTRACT,
+        abi: COURSE_PLATFORM_ABI,
+        functionName: 'deactivateCourse',
+        args: [courseId],
+      })
+    } catch (error) {
+      console.error('Deactivate failed:', error)
+    }
+  }
+
+  // 重新激活课程
+  const handleReactivateCourse = async (courseId: bigint) => {
+    if (!isOwner) return
+    
+    try {
+      reactivateContract({
+        address: COURSE_PLATFORM_CONTRACT,
+        abi: COURSE_PLATFORM_ABI,
+        functionName: 'reactivateCourse',
+        args: [courseId],
+      })
+    } catch (error) {
+      console.error('Reactivate failed:', error)
+    }
+  }
   const handleViewContent = async (course: Course) => {
     try {
       // 这里实现内容查看逻辑
@@ -319,7 +472,41 @@ export function CoursePlatform() {
     }
   }, [isApproveConfirmed, selectedCourse])
 
-  // 处理购买成功
+  // 处理更新成功
+  useEffect(() => {
+    if (isUpdateConfirmed) {
+      setSuccessMessage('✅ 课程更新成功！')
+      setIsEditMode(false)
+      setEditingCourse(null)
+      
+      // 更新成功后刷新所有数据
+      setTimeout(() => {
+        refreshAllData()
+      }, 2000)
+
+      // 3秒后清除成功消息
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 3000)
+    }
+  }, [isUpdateConfirmed])
+
+  // 处理停用/激活成功
+  useEffect(() => {
+    if (isDeactivateConfirmed || isReactivateConfirmed) {
+      setSuccessMessage(isDeactivateConfirmed ? '⛔ 课程已停用！' : '✅ 课程已重新激活！')
+      
+      // 操作成功后刷新所有数据
+      setTimeout(() => {
+        refreshAllData()
+      }, 2000)
+
+      // 3秒后清除成功消息
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 3000)
+    }
+  }, [isDeactivateConfirmed, isReactivateConfirmed])
   useEffect(() => {
     if (isPurchaseConfirmed) {
       setSuccessMessage('🎉 课程购买成功！')
@@ -354,19 +541,19 @@ export function CoursePlatform() {
       {platformStats && (
         <div className="platform-stats">
           <div className="stat-card">
-            <h2>📚 总课程数</h2>
+            <h3>📚 总课程数</h3>
             <p>{Number(platformStats[0])}</p>
           </div>
           <div className="stat-card">
-            <h2>✅ 活跃课程</h2>
+            <h3>✅ 活跃课程</h3>
             <p>{Number(platformStats[1])}</p>
           </div>
           <div className="stat-card">
-            <h2>💰 总销售量</h2>
+            <h3>💰 总销售量</h3>
             <p>{Number(platformStats[2])}</p>
           </div>
           <div className="stat-card">
-            <h2>🪙 我的YD余额</h2>
+            <h3>🪙 我的YD余额</h3>
             <p>{userYDBalance ? formatPrice(userYDBalance) : '0'}</p>
           </div>
         </div>
@@ -385,15 +572,69 @@ export function CoursePlatform() {
             const isOwned = checkUserOwnsCourse(course.id)
             return (
               <div key={Number(course.id)} className="course-card">
+                {/* 管理员操作按钮 */}
+                {isOwner && (
+                  <div className="admin-actions">
+                    <button 
+                      className="edit-btn"
+                      onClick={() => handleEditCourse(course)}
+                      disabled={isEditMode}
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      className="toggle-status-btn"
+                      onClick={() => course.isActive ? 
+                        handleDeactivateCourse(course.id) : 
+                        handleReactivateCourse(course.id)}
+                      disabled={isDeactivatePending || isReactivatePending}
+                    >
+                      {course.isActive ? '⛔' : '✅'}
+                    </button>
+                  </div>
+                )}
+
                 <div className="course-header">
-                  <h3>{course.title}</h3>
+                  {isEditMode && editingCourse?.id === course.id ? (
+                    <input
+                      className="edit-title-input"
+                      value={editFormData.title}
+                      onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                      placeholder="课程标题"
+                    />
+                  ) : (
+                    <h3>{course.title}</h3>
+                  )}
+                  
                   <div className="course-price">
-                    {formatPrice(course.price)} YD
+                    {isEditMode && editingCourse?.id === course.id ? (
+                      <input
+                        className="edit-price-input"
+                        value={editFormData.price}
+                        onChange={(e) => setEditFormData({...editFormData, price: e.target.value})}
+                        placeholder="价格"
+                        type="number"
+                        min="0"
+                        step="0.000000000000000001"
+                      />
+                    ) : (
+                      `${formatPrice(course.price)} YD`
+                    )}
                   </div>
                 </div>
                 
                 <div className="course-content">
-                  <p className="course-description">{course.description}</p>
+                  {isEditMode && editingCourse?.id === course.id ? (
+                    <textarea
+                      className="edit-description-textarea"
+                      value={editFormData.description}
+                      onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                      placeholder="课程描述"
+                      rows={3}
+                    />
+                  ) : (
+                    <p className="course-description">{course.description}</p>
+                  )}
                   
                   <div className="course-meta">
                     <div className="meta-item">
@@ -410,6 +651,12 @@ export function CoursePlatform() {
                       <span className="meta-label">销售量:</span>
                       <span className="meta-value">{Number(course.totalSales)}</span>
                     </div>
+                    <div className="meta-item">
+                      <span className="meta-label">状态:</span>
+                      <span className={`meta-value ${course.isActive ? 'active' : 'inactive'}`}>
+                        {course.isActive ? '✅ 活跃' : '⛔ 已停用'}
+                      </span>
+                    </div>
                     {course.contentHash && (
                       <div className="meta-item">
                         <span className="meta-label">内容类型:</span>
@@ -423,18 +670,36 @@ export function CoursePlatform() {
                 </div>
 
                 <div className="course-footer">
-                  {(() => {
-                    const buttonState = getButtonState(course)
-                    return (
+                  {isEditMode && editingCourse?.id === course.id ? (
+                    <div className="edit-actions">
                       <button 
-                        className={`course-button ${buttonState.className || ''}`}
-                        onClick={buttonState.onClick}
-                        disabled={buttonState.disabled}
+                        className="save-edit-btn"
+                        onClick={handleSaveEdit}
+                        disabled={isUpdatePending || isUpdateConfirming}
                       >
-                        {buttonState.text}
+                        {isUpdatePending || isUpdateConfirming ? '保存中...' : '💾 保存'}
                       </button>
-                    )
-                  })()}
+                      <button 
+                        className="cancel-edit-btn"
+                        onClick={handleCancelEdit}
+                      >
+                        ❌ 取消
+                      </button>
+                    </div>
+                  ) : (
+                    (() => {
+                      const buttonState = getButtonState(course)
+                      return (
+                        <button 
+                          className={`course-button ${buttonState.className || ''}`}
+                          onClick={buttonState.onClick}
+                          disabled={buttonState.disabled || !course.isActive}
+                        >
+                          {!course.isActive ? '课程已停用' : buttonState.text}
+                        </button>
+                      )
+                    })()
+                  )}
                 </div>
 
                 {isOwned && (
@@ -452,32 +717,6 @@ export function CoursePlatform() {
           </div>
         )}
       </div>
-
-      {/* 我的课程 */}
-      {userCourses && userCourses.length > 0 && (
-        <div className="my-courses-section">
-          <h3>我的课程</h3>
-          <div className="my-courses-list">
-            {userCourses.map((courseId: bigint) => {
-              const course = courses?.find((c: Course) => c.id === courseId)
-              return course ? (
-                <div key={Number(courseId)} className="my-course-item">
-                  <h4>{course.title}</h4>
-                  <p>购买价格: {formatPrice(course.price)} YD</p>
-                  <p>内容哈希: {course.contentHash.slice(0, 10)}...</p>
-                  <button 
-                    className="access-button"
-                    onClick={() => handleViewContent(course)}
-                  >
-                    查看内容
-                  </button>
-                </div>
-              ) : null
-            })}
-          </div>
-        </div>
-      )}
-
       {/* 内容查看器 */}
       {viewingContent && (
         <div className="content-viewer-overlay" onClick={() => setViewingContent(null)}>

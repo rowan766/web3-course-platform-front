@@ -9,13 +9,10 @@ export function ProductsPage() {
     address: address,
   })
 
-  return (
-      <main className="app-main">
-        {isConnected ? (
-          <div className="connected-content"> 
-            <TokenPurchase></TokenPurchase>
-            <CoursePlatform></CoursePlatform>
-            <div className="features">
+
+  function bfDom(){
+    return (
+              <div className="features">
               <h2>Available Features</h2>
               <div className="feature-grid">
                 <div className="feature-card">
@@ -64,6 +61,15 @@ export function ProductsPage() {
                 </div>
               </div>
             </div>
+    )
+  }
+
+  return (
+      <main className="app-main">
+        {isConnected ? (
+          <div className="connected-content"> 
+            <TokenPurchase></TokenPurchase>
+            <CoursePlatform></CoursePlatform>
           </div>
         ) : (
           <div className="connect-prompt">

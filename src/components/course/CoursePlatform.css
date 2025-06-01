@@ -1,4 +1,4 @@
-/* CoursePlatform.css - 与功能卡片一致的样式 */
+/* CoursePlatform.css - 完整版本 */
 .course-platform {
   padding: 2rem;
   max-width: 1400px;
@@ -82,7 +82,7 @@
   box-shadow: 0 8px 25px rgba(67, 56, 202, 0.2);
 }
 
-.stat-card h3 {
+.stat-card h2 {
   color: #d1d5db;
   font-size: 0.85rem;
   margin-bottom: 0.75rem;
@@ -197,6 +197,63 @@
   box-shadow: 0 20px 50px rgba(67, 56, 202, 0.25);
 }
 
+/* 管理员操作按钮 */
+.admin-actions {
+  position: absolute;
+  top: 0rem;
+  left: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.edit-btn,
+.toggle-status-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.edit-btn {
+  background: rgba(59, 130, 246, 0.9);
+  color: white;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+.edit-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 1);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.toggle-status-btn {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.toggle-status-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 1);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.edit-btn:disabled,
+.toggle-status-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* 课程头部 */
 .course-header {
   display: flex;
@@ -229,6 +286,60 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+/* 编辑表单元素 */
+.edit-title-input,
+.edit-price-input,
+.edit-description-textarea {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: inherit;
+  font-weight: inherit;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.edit-title-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.edit-price-input {
+  width: 100px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.edit-description-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.edit-title-input:focus,
+.edit-price-input:focus,
+.edit-description-textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.edit-title-input::placeholder,
+.edit-price-input::placeholder,
+.edit-description-textarea::placeholder {
+  color: #a0a0ab;
 }
 
 /* 课程内容 */
@@ -273,6 +384,27 @@
   color: #ffffff;
   font-weight: 600;
   font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* 课程状态显示 */
+.meta-value.active {
+  color: #22c55e !important;
+  font-weight: 700;
+}
+
+.meta-value.inactive {
+  color: #ef4444 !important;
+  font-weight: 700;
+}
+
+/* 停用课程的样式 */
+.course-card:has(.meta-value.inactive) {
+  opacity: 0.7;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.course-card:has(.meta-value.inactive)::before {
+  background: linear-gradient(90deg, #ef4444, #f87171, #ef4444);
 }
 
 /* 课程按钮区域 */
@@ -323,10 +455,12 @@
 }
 
 .course-button:disabled {
-  opacity: 0.6;
+  background: rgba(107, 114, 128, 0.5);
+  color: #9ca3af;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 0 6px 20px rgba(67, 56, 202, 0.2);
+  box-shadow: none;
+  opacity: 0.6;
 }
 
 .course-button.owned {
@@ -336,6 +470,59 @@
 
 .course-button.owned:hover {
   box-shadow: 0 12px 30px rgba(34, 197, 94, 0.5);
+  transform: translateY(-3px);
+}
+
+/* 编辑操作按钮 */
+.edit-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.save-edit-btn,
+.cancel-edit-btn {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.save-edit-btn {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: white;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
+
+.cancel-edit-btn {
+  background: rgba(107, 114, 128, 0.8);
+  color: white;
+  box-shadow: 0 4px 15px rgba(107, 114, 128, 0.2);
+}
+
+.save-edit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+}
+
+.cancel-edit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
+  background: rgba(107, 114, 128, 1);
+}
+
+.save-edit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* 已拥有徽章 */
@@ -479,119 +666,7 @@
   box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
 }
 
-/* 消息提示 */
-.error-message {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
-  padding: 1rem;
-  border-radius: 12px;
-  margin-top: 2rem;
-  text-align: center;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-}
-
-.success-message {
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.4);
-  color: #86efac;
-  padding: 1rem;
-  border-radius: 12px;
-  margin-top: 2rem;
-  text-align: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  backdrop-filter: blur(10px);
-}
-
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  .courses-grid {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 800px;
-  }
-}
-
-@media (max-width: 768px) {
-  .course-platform {
-    padding: 1rem;
-  }
-  
-  .platform-stats {
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-  
-  .stat-card {
-    max-width: none;
-    min-width: auto;
-  }
-  
-  .courses-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .course-card {
-    padding: 1.5rem;
-    min-height: 280px;
-  }
-  
-  .course-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .course-price {
-    align-self: flex-end;
-  }
-  
-  .section-header h2 {
-    font-size: 2rem;
-  }
-  
-  .my-courses-list {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .course-card {
-    padding: 1rem;
-    min-height: 250px;
-  }
-  
-  .course-header h3 {
-    font-size: 1.1rem;
-  }
-  
-  .course-price {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
-  }
-  
-  .section-header h2 {
-    font-size: 1.75rem;
-  }
-  
-  .meta-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-  
-  .connect-prompt h2 {
-    font-size: 2rem;
-  }
-  
-  .connect-prompt {
-    padding: 2rem 1rem;
-  }
-}
-
+/* 内容查看器覆盖层 */
 .content-viewer-overlay {
   position: fixed;
   top: 0;
@@ -673,19 +748,112 @@
   font-size: 1.1rem;
 }
 
-/* 改进已购买按钮样式 */
-.course-button.owned {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+/* 消息提示 */
+.error-message {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 2rem;
+  text-align: center;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
 }
 
-.course-button.owned:hover {
-  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.5);
-  transform: translateY(-3px);
+.success-message {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #86efac;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 2rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  backdrop-filter: blur(10px);
 }
 
 /* 响应式设计 */
+@media (max-width: 1024px) {
+  .courses-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 800px;
+  }
+}
+
 @media (max-width: 768px) {
+  .course-platform {
+    padding: 1rem;
+  }
+  
+  .platform-stats {
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .stat-card {
+    max-width: none;
+    min-width: auto;
+  }
+  
+  .courses-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .course-card {
+    padding: 1.5rem;
+    min-height: 280px;
+  }
+  
+  .course-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .course-price {
+    align-self: flex-end;
+  }
+  
+  .section-header h2 {
+    font-size: 2rem;
+  }
+  
+  .my-courses-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-actions {
+    top: 0.5rem;
+    left: 0.5rem;
+    gap: 0.25rem;
+  }
+  
+  .edit-btn,
+  .toggle-status-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .edit-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .edit-title-input {
+    font-size: 1.1rem;
+    padding: 0.4rem;
+  }
+  
+  .edit-price-input {
+    width: 80px;
+    font-size: 0.8rem;
+  }
+  
   .content-viewer {
     width: 95%;
     max-height: 95%;
@@ -702,5 +870,57 @@
   .content-body {
     height: calc(95vh - 80px);
     max-height: 500px;
+  }
+}
+
+@media (max-width: 480px) {
+  .course-card {
+    padding: 1rem;
+    min-height: 250px;
+  }
+  
+  .course-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .course-price {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .section-header h2 {
+    font-size: 1.75rem;
+  }
+  
+  .meta-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .connect-prompt h2 {
+    font-size: 2rem;
+  }
+  
+  .connect-prompt {
+    padding: 2rem 1rem;
+  }
+  
+  .admin-actions {
+    position: relative;
+    top: auto;
+    left: auto;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+  
+  .edit-title-input,
+  .edit-description-textarea {
+    font-size: 0.95rem;
+  }
+  
+  .edit-price-input {
+    width: 70px;
+    font-size: 0.75rem;
   }
 }

@@ -17,6 +17,7 @@ body {
 .app-container {
   min-height: 100vh;
   padding: 2rem;
+  padding-top: 0rem;
 }
 
 .app-header {
@@ -177,6 +178,7 @@ body {
 @media (max-width: 768px) {
   .app-container {
     padding: 1rem;
+    padding-top: 0rem;
   }
   
   .app-header h1 {

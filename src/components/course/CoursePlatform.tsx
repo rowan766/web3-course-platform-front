@@ -249,11 +249,11 @@ export function CoursePlatform() {
     hash: updateHash,
   })
 
-  const { isSuccess: isDeactivateConfirmed } = useWaitForTransactionReceipt({
+  const { isLoading: isDeactivateConfirming, isSuccess: isDeactivateConfirmed } = useWaitForTransactionReceipt({
     hash: deactivateHash,
   })
 
-  const {isSuccess: isReactivateConfirmed } = useWaitForTransactionReceipt({
+  const { isLoading: isReactivateConfirming, isSuccess: isReactivateConfirmed } = useWaitForTransactionReceipt({
     hash: reactivateHash,
   })
 
@@ -395,19 +395,30 @@ export function CoursePlatform() {
       console.error('Reactivate failed:', error)
     }
   }
+  // 查看课程内容
   const handleViewContent = async (course: Course) => {
     try {
       // 这里实现内容查看逻辑
       // 如果是 IPFS 哈希，可以通过 IPFS 网关访问
       if (course.contentHash) {
-        // 方法1: 直接通过 IPFS 网关打开
         const ipfsUrl = `https://ipfs.io/ipfs/${course.contentHash}`
         
-        // 方法2: 如果是 PDF，在新窗口打开
-        if (course.description.toLowerCase().includes('pdf') || course.title.toLowerCase().includes('pdf')) {
+        // 检测文件类型
+        const isVideo = course.description.toLowerCase().includes('video') || 
+                       course.description.toLowerCase().includes('视频') ||
+                       course.title.toLowerCase().includes('video')
+        
+        const isPDF = course.description.toLowerCase().includes('pdf') || 
+                     course.title.toLowerCase().includes('pdf')
+        
+        if (isPDF) {
+          // PDF 在新窗口打开
           window.open(ipfsUrl, '_blank')
+        } else if (isVideo) {
+          // 视频使用模态框显示
+          setViewingContent(course)
         } else {
-          // 方法3: 如果是视频或其他内容，设置查看状态
+          // 其他文件类型也在模态框中显示
           setViewingContent(course)
         }
       } else {
@@ -417,6 +428,17 @@ export function CoursePlatform() {
       console.error('Failed to view content:', error)
       alert('内容加载失败')
     }
+  }
+
+  // 获取文件类型
+  const getFileType = (course: Course) => {
+    const desc = course.description.toLowerCase()
+    const title = course.title.toLowerCase()
+    
+    if (desc.includes('video') || desc.includes('视频') || title.includes('video')) return 'video'
+    if (desc.includes('audio') || desc.includes('音频') || title.includes('audio')) return 'audio'
+    if (desc.includes('pdf') || title.includes('pdf')) return 'pdf'
+    return 'document'
   }
 
   // 格式化价格显示
@@ -717,6 +739,32 @@ export function CoursePlatform() {
           </div>
         )}
       </div>
+
+      {/* 我的课程 */}
+      {userCourses && userCourses.length > 0 && (
+        <div className="my-courses-section">
+          <h3>我的课程</h3>
+          <div className="my-courses-list">
+            {userCourses.map((courseId: bigint) => {
+              const course = courses?.find((c: Course) => c.id === courseId)
+              return course ? (
+                <div key={Number(courseId)} className="my-course-item">
+                  <h4>{course.title}</h4>
+                  <p>购买价格: {formatPrice(course.price)} YD</p>
+                  <p>内容哈希: {course.contentHash.slice(0, 10)}...</p>
+                  <button 
+                    className="access-button"
+                    onClick={() => handleViewContent(course)}
+                  >
+                    查看内容
+                  </button>
+                </div>
+              ) : null
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 内容查看器 */}
       {viewingContent && (
         <div className="content-viewer-overlay" onClick={() => setViewingContent(null)}>
@@ -727,12 +775,46 @@ export function CoursePlatform() {
             </div>
             <div className="content-body">
               {viewingContent.contentHash ? (
-                <iframe 
-                  src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`}
-                  width="100%" 
-                  height="500px"
-                  title={viewingContent.title}
-                />
+                getFileType(viewingContent) === 'video' ? (
+                  <video 
+                    controls 
+                    width="100%" 
+                    height="100%"
+                    controlsList="nodownload"
+                    style={{ backgroundColor: '#000' }}
+                  >
+                    <source src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`} type="video/mp4" />
+                    <source src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`} type="video/webm" />
+                    <source src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`} type="video/ogg" />
+                    您的浏览器不支持视频播放
+                  </video>
+                ) : getFileType(viewingContent) === 'audio' ? (
+                  <div className="audio-container">
+                    <audio 
+                      controls 
+                      style={{ width: '100%', marginBottom: '2rem' }}
+                    >
+                      <source src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`} type="audio/mpeg" />
+                      <source src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`} type="audio/ogg" />
+                      <source src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`} type="audio/wav" />
+                      您的浏览器不支持音频播放
+                    </audio>
+                    <div className="audio-info">
+                      <h4>🎵 {viewingContent.title}</h4>
+                      <p>{viewingContent.description}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <iframe 
+                    src={`https://ipfs.io/ipfs/${viewingContent.contentHash}`}
+                    width="100%" 
+                    height="500px"
+                    title={viewingContent.title}
+                    allow="fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen={true}
+                    style={{ border: 'none' }}
+                  />
+                )
               ) : (
                 <p>内容加载中...</p>
               )}

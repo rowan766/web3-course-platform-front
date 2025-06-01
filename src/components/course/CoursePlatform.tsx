@@ -249,11 +249,11 @@ export function CoursePlatform() {
     hash: updateHash,
   })
 
-  const { isLoading: isDeactivateConfirming, isSuccess: isDeactivateConfirmed } = useWaitForTransactionReceipt({
+  const { isSuccess: isDeactivateConfirmed } = useWaitForTransactionReceipt({
     hash: deactivateHash,
   })
 
-  const { isLoading: isReactivateConfirming, isSuccess: isReactivateConfirmed } = useWaitForTransactionReceipt({
+  const { isSuccess: isReactivateConfirmed } = useWaitForTransactionReceipt({
     hash: reactivateHash,
   })
 

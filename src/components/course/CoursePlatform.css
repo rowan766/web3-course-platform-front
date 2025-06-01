@@ -1,4 +1,4 @@
-/* CoursePlatform.css */
+/* CoursePlatform.css - 与功能卡片一致的样式 */
 .course-platform {
   padding: 2rem;
   max-width: 1400px;
@@ -13,6 +13,8 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(67, 56, 202, 0.2);
 }
 
 .connect-prompt h2 {
@@ -23,30 +25,37 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-weight: 700;
 }
 
 .connect-prompt p {
   color: #e5e7eb;
   font-size: 1.2rem;
+  font-weight: 500;
 }
 
-/* 平台统计 */
+/* 平台统计 - 横向布局 */
 .platform-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
   margin-bottom: 3rem;
+  flex-wrap: wrap;
 }
 
 .stat-card {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  min-width: 140px;
+  flex: 1;
+  max-width: 180px;
+  backdrop-filter: blur(10px);
 }
 
 .stat-card::before {
@@ -75,17 +84,20 @@
 
 .stat-card h3 {
   color: #d1d5db;
-  font-size: 1rem;
+  font-size: 0.85rem;
   margin-bottom: 0.75rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-card p {
   color: #ffffff;
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 700;
   margin: 0;
   font-family: 'Monaco', 'Menlo', monospace;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* 区域标题 */
@@ -99,10 +111,23 @@
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #ffffff, #d1d5db);
+  background: linear-gradient(135deg, #4338ca, #8b5cf6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  position: relative;
+}
+
+.section-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(135deg, #4338ca, #8b5cf6);
+  border-radius: 2px;
 }
 
 .section-header p {
@@ -111,15 +136,18 @@
   font-weight: 500;
 }
 
-/* 课程网格 */
+/* 课程网格 - 与功能卡片一致 */
 .courses-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
   margin-bottom: 3rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* 课程卡片 */
+/* 课程卡片 - 与功能卡片完全一致的样式 */
 .course-card {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -128,10 +156,26 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(67, 56, 202, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
 }
 
 .course-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4338ca, #8b5cf6, #4338ca);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.course-card::after {
   content: '';
   position: absolute;
   top: 0;
@@ -142,15 +186,15 @@
   transition: left 0.7s ease;
 }
 
-.course-card:hover::before {
+.course-card:hover::after {
   left: 100%;
 }
 
 .course-card:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(139, 92, 246, 0.4);
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(67, 56, 202, 0.2);
+  transform: translateY(-10px);
+  box-shadow: 0 20px 50px rgba(67, 56, 202, 0.25);
 }
 
 /* 课程头部 */
@@ -169,22 +213,27 @@
   margin: 0;
   flex: 1;
   line-height: 1.4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .course-price {
   background: linear-gradient(135deg, #4338ca, #8b5cf6);
   color: white;
   padding: 0.5rem 1rem;
-  border-radius: 25px;
+  border-radius: 20px;
   font-weight: 700;
   font-size: 0.9rem;
   font-family: 'Monaco', 'Menlo', monospace;
   white-space: nowrap;
   box-shadow: 0 4px 15px rgba(67, 56, 202, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* 课程内容 */
 .course-content {
+  flex: 1;
   margin-bottom: 2rem;
 }
 
@@ -206,28 +255,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.9rem;
+}
+
+.meta-item:last-child {
+  border-bottom: none;
 }
 
 .meta-label {
-  color: #d1d5db;
-  font-size: 0.9rem;
-  font-weight: 600;
+  color: #a0a0ab;
+  font-weight: 500;
 }
 
 .meta-value {
   color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   font-family: 'Monaco', 'Menlo', monospace;
 }
 
-/* 课程按钮 */
+/* 课程按钮区域 */
 .course-footer {
   margin-top: auto;
 }
 
 .course-button {
-  width: 100%;
   background: linear-gradient(135deg, #4338ca, #8b5cf6);
   border: none;
   color: white;
@@ -237,24 +290,12 @@
   font-size: 1rem;
   font-weight: 700;
   transition: all 0.3s ease;
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 20px rgba(67, 56, 202, 0.3);
   position: relative;
   overflow: hidden;
-}
-
-.course-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.course-button:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(67, 56, 202, 0.5);
-}
-
-.course-button.owned {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  cursor: default;
 }
 
 .course-button::before {
@@ -268,8 +309,33 @@
   transition: left 0.5s ease;
 }
 
-.course-button:not(:disabled):hover::before {
+.course-button:hover::before {
   left: 100%;
+}
+
+.course-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(67, 56, 202, 0.5);
+}
+
+.course-button:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.course-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 6px 20px rgba(67, 56, 202, 0.2);
+}
+
+.course-button.owned {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+}
+
+.course-button.owned:hover {
+  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.5);
 }
 
 /* 已拥有徽章 */
@@ -284,6 +350,35 @@
   font-size: 0.8rem;
   font-weight: 600;
   box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  z-index: 10;
+}
+
+/* 用户余额显示 */
+.user-balance {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.balance-label {
+  color: #e5e7eb;
+  margin-right: 0.5rem;
+  font-weight: 600;
+}
+
+.balance-value {
+  color: #10b981;
+  font-weight: 700;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 1.1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* 无课程提示 */
@@ -294,17 +389,20 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
 }
 
 .no-courses h3 {
   color: #ffffff;
   font-size: 1.5rem;
   margin-bottom: 1rem;
+  font-weight: 700;
 }
 
 .no-courses p {
   color: #d1d5db;
   font-size: 1rem;
+  font-weight: 500;
 }
 
 /* 我的课程区域 */
@@ -319,6 +417,11 @@
   font-size: 1.8rem;
   margin-bottom: 2rem;
   font-weight: 700;
+  text-align: center;
+  background: linear-gradient(135deg, #4338ca, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .my-courses-list {
@@ -328,17 +431,19 @@
 }
 
 .my-course-item {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 16px;
   padding: 1.5rem;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .my-course-item:hover {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.2);
   border-color: rgba(16, 185, 129, 0.5);
   transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
 }
 
 .my-course-item h4 {
@@ -353,6 +458,7 @@
   font-size: 0.9rem;
   margin-bottom: 1rem;
   font-weight: 600;
+  font-family: 'Monaco', 'Menlo', monospace;
 }
 
 .access-button {
@@ -383,6 +489,7 @@
   margin-top: 2rem;
   text-align: center;
   font-weight: 600;
+  backdrop-filter: blur(10px);
 }
 
 .success-message {
@@ -395,17 +502,31 @@
   text-align: center;
   font-weight: 700;
   font-size: 1.1rem;
+  backdrop-filter: blur(10px);
 }
 
 /* 响应式设计 */
+@media (max-width: 1024px) {
+  .courses-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 800px;
+  }
+}
+
 @media (max-width: 768px) {
   .course-platform {
     padding: 1rem;
   }
   
   .platform-stats {
-    grid-template-columns: repeat(2, 1fr);
+    flex-direction: column;
     gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .stat-card {
+    max-width: none;
+    min-width: auto;
   }
   
   .courses-grid {
@@ -415,11 +536,13 @@
   
   .course-card {
     padding: 1.5rem;
+    min-height: 280px;
   }
   
   .course-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 1rem;
   }
   
   .course-price {
@@ -436,20 +559,9 @@
 }
 
 @media (max-width: 480px) {
-  .platform-stats {
-    grid-template-columns: 1fr;
-  }
-  
-  .stat-card {
-    padding: 1rem;
-  }
-  
-  .stat-card p {
-    font-size: 1.5rem;
-  }
-  
   .course-card {
     padding: 1rem;
+    min-height: 250px;
   }
   
   .course-header h3 {

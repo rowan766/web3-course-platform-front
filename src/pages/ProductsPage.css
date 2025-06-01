@@ -1,16 +1,25 @@
-/* ProductsPage.css */
+/* ProductsPage.css - 优化版本 */
 
 .app-main {
-  min-height: calc(100vh - 80px); /* 减去header高度 */
+  min-height: calc(100vh - 80px);
   width: 100%;
+  background: linear-gradient(135deg, rgba(67, 56, 202, 0.05), rgba(139, 92, 246, 0.05));
 }
 
 .connected-content {
   width: 100%;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
 }
+
+/* 功能区域整体样式 */
 .features {
-  padding: 2rem;
+  padding: 3rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .features h2 {
@@ -18,85 +27,148 @@
   text-align: center;
   margin-bottom: 3rem;
   font-size: 2.5rem;
-  background: linear-gradient(135deg, #7b3bf0, #a855f7);
+  font-weight: 700;
+  background: linear-gradient(135deg, #4338ca, #8b5cf6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
+.features h2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(135deg, #4338ca, #8b5cf6);
+  border-radius: 2px;
+}
+
+/* 功能网格布局 */
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 改为固定4列 */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
-  max-width: 1400px; /* 添加最大宽度控制 */
-  margin: 0 auto; /* 居中显示 */
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
+/* 功能卡片样式 */
 .feature-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 3rem 2rem; /* 增加垂直内边距 */
-  min-height: 220px; /* 添加最小高度 */
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(67, 56, 202, 0.1);
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .feature-card::before {
   content: '';
   position: absolute;
   top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4338ca, #8b5cf6, #4338ca);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+}
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(123, 59, 240, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
   transition: left 0.7s ease;
 }
 
-.feature-card:hover::before {
+.feature-card:hover::after {
   left: 100%;
 }
 
 .feature-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(123, 59, 240, 0.3);
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(123, 59, 240, 0.15);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(139, 92, 246, 0.4);
+  transform: translateY(-10px);
+  box-shadow: 0 20px 50px rgba(67, 56, 202, 0.25);
+}
+
+/* 功能卡片内容 */
+.feature-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 .feature-card h3 {
   color: #ffffff;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.feature-card h3 .emoji {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .feature-card p {
-  color: #a0a0ab;
-  margin-bottom: 2rem;
+  color: #e5e7eb;
+  margin: 0;
   line-height: 1.6;
   font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
+/* 功能按钮 */
 .feature-button {
-  background: linear-gradient(135deg, #7b3bf0, #a855f7);
+  background: linear-gradient(135deg, #4338ca, #8b5cf6);
   border: none;
   color: white;
-  padding: 0.875rem 2rem;
+  padding: 1rem 2rem;
   border-radius: 25px;
   cursor: pointer;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   width: 100%;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 20px rgba(67, 56, 202, 0.3);
 }
 
 .feature-button::before {
@@ -115,74 +187,186 @@
 }
 
 .feature-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(123, 59, 240, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(67, 56, 202, 0.5);
 }
 
 .feature-button:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
 }
 
-/* 连接提示样式 */
+/* 连接提示样式优化 */
 .connect-prompt {
   text-align: center;
-  padding: 4rem 2rem;
-  max-width: 600px;
+  padding: 5rem 2rem;
+  max-width: 700px;
   margin: 0 auto;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(67, 56, 202, 0.2);
 }
 
 .connect-prompt h2 {
   color: #ffffff;
-  margin-bottom: 1rem;
-  font-size: 3rem;
-  background: linear-gradient(135deg, #7b3bf0, #a855f7);
+  margin-bottom: 1.5rem;
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #4338ca, #8b5cf6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .connect-prompt p {
-  color: #a0a0ab;
-  font-size: 1.3rem;
+  color: #e5e7eb;
+  font-size: 1.4rem;
   margin-bottom: 3rem;
+  font-weight: 500;
+  line-height: 1.6;
 }
 
 .connect-features {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
   align-items: center;
 }
 
 .connect-features .feature-item {
   color: #ffffff;
-  padding: 1rem 2rem;
-  background: rgba(123, 59, 240, 0.1);
-  border-radius: 25px;
-  border: 1px solid rgba(123, 59, 240, 0.2);
+  padding: 1.25rem 2.5rem;
+  background: rgba(67, 56, 202, 0.15);
+  border-radius: 30px;
+  border: 1px solid rgba(139, 92, 246, 0.3);
   transition: all 0.3s ease;
   font-size: 1.1rem;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.connect-features .feature-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.connect-features .feature-item:hover::before {
+  left: 100%;
 }
 
 .connect-features .feature-item:hover {
-  background: rgba(123, 59, 240, 0.15);
-  transform: translateX(8px);
+  background: rgba(67, 56, 202, 0.25);
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateX(12px) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(67, 56, 202, 0.3);
 }
 
+/* 响应式设计优化 */
 @media (max-width: 1200px) {
   .feature-grid {
-    grid-template-columns: repeat(3, 1fr); /* 中等屏幕3列 */
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1000px;
+  }
+  
+  .features {
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .features h2 {
+    font-size: 2.25rem;
+  }
+  
+  .feature-card {
+    padding: 2rem 1.5rem;
+    min-height: 250px;
   }
 }
 
 @media (max-width: 768px) {
-  .feature-grid {
-    grid-template-columns: repeat(2, 1fr); /* 小屏幕2列 */
+  .connected-content {
+    gap: 2rem;
+  }
+  
+  .features {
+    padding: 2rem 1rem;
+  }
+  
+  .features h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .connect-prompt {
+    padding: 3rem 1.5rem;
+    margin: 1rem;
+  }
+  
+  .connect-prompt h2 {
+    font-size: 2.5rem;
+  }
+  
+  .connect-prompt p {
+    font-size: 1.2rem;
   }
 }
 
 @media (max-width: 480px) {
   .feature-grid {
-    grid-template-columns: 1fr; /* 手机端1列 */
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+    min-height: 220px;
+  }
+  
+  .feature-card h3 {
+    font-size: 1.25rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .feature-card h3 .emoji {
+    font-size: 1.75rem;
+  }
+  
+  .feature-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .connect-prompt {
+    padding: 2rem 1rem;
+  }
+  
+  .connect-prompt h2 {
+    font-size: 2rem;
+  }
+  
+  .connect-features .feature-item {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+  
+  .features {
+    padding: 1.5rem 1rem;
   }
 }

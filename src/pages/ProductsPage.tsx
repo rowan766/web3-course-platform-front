@@ -19,36 +19,48 @@ export function ProductsPage() {
               <h2>Available Features</h2>
               <div className="feature-grid">
                 <div className="feature-card">
-                  <h3>💸 Send Transaction</h3>
-                  <p>Send ETH to other addresses</p>
-                  <button className="feature-button">Coming Soon</button>
+                  <div className="feature-card-content">
+                    <h3><span className="emoji">💸 Send Transactio</span>n</h3>
+                    <p>Send ETH to other addresses</p>
+                    <button className="feature-button">Coming Soon</button>
+                  </div>
                 </div>
                 
                 <div className="feature-card">
-                  <h3>📜 Smart Contracts</h3>
-                  <p>Interact with smart contracts</p>
-                  <button className="feature-button">Coming Soon</button>
+                  <div className="feature-card-content">
+                    <h3> <span className="emoji">📜 Smart Contracts</span></h3>
+                    <p>Interact with smart contracts</p>
+                    <button className="feature-button">Coming Soon</button>
+                  </div>
                 </div>
                 
                 <div className="feature-card">
-                  <h3>🏪 DeFi</h3>
-                  <p>Decentralized Finance features</p>
-                  <button className="feature-button">Coming Soon</button>
+                  <div className="feature-card-content">
+                    <h3> <span className="emoji">🏪 DeFi</span></h3>
+                    <p>Decentralized Finance features</p>
+                    <button className="feature-button">Coming Soon</button>
+                  </div>
                 </div>
                 <div className="feature-card">
-                  <h3>🎮 NFT Marketplace</h3>
-                  <p>Buy and sell NFTs</p>
-                  <button className="feature-button">Coming Soon</button>
+                  <div className="feature-card-content">
+                    <h3> <span className="emoji">🎮 NFT Marketplace</span></h3>
+                    <p>Buy and sell NFTs</p>
+                    <button className="feature-button">Coming Soon</button>
+                  </div>
                 </div>
                 <div className="feature-card">
-                  <h3>📊 Analytics</h3>
-                  <p>Portfolio tracking and analytics</p>
-                  <button className="feature-button">Coming Soon</button>
+                  <div className="feature-card-content">
+                    <h3><span className="emoji">📊 Analytics</span></h3>
+                    <p>Portfolio tracking and analytics</p>
+                    <button className="feature-button">Coming Soon</button>
+                  </div>
                 </div>
                 <div className="feature-card">
-                  <h3>🔗 Cross-chain</h3>
+                  <div className="feature-card-content">
+                  <h3><span className="emoji">🔗 Cross-chain</span></h3>
                   <p>Cross-chain bridge functionality</p>
                   <button className="feature-button">Coming Soon</button>
+                  </div>
                 </div>
               </div>
             </div>

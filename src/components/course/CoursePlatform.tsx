@@ -739,32 +739,6 @@ export function CoursePlatform() {
           </div>
         )}
       </div>
-
-      {/* 我的课程 */}
-      {userCourses && userCourses.length > 0 && (
-        <div className="my-courses-section">
-          <h3>我的课程</h3>
-          <div className="my-courses-list">
-            {userCourses.map((courseId: bigint) => {
-              const course = courses?.find((c: Course) => c.id === courseId)
-              return course ? (
-                <div key={Number(courseId)} className="my-course-item">
-                  <h4>{course.title}</h4>
-                  <p>购买价格: {formatPrice(course.price)} YD</p>
-                  <p>内容哈希: {course.contentHash.slice(0, 10)}...</p>
-                  <button 
-                    className="access-button"
-                    onClick={() => handleViewContent(course)}
-                  >
-                    查看内容
-                  </button>
-                </div>
-              ) : null
-            })}
-          </div>
-        </div>
-      )}
-
       {/* 内容查看器 */}
       {viewingContent && (
         <div className="content-viewer-overlay" onClick={() => setViewingContent(null)}>

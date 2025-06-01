@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { parseEther, formatEther } from 'viem'
 import './TokenPurchase.css'
+import { useChainId } from 'wagmi'
 
 // YDToken合约ABI
 const YD_TOKEN_ABI = [
@@ -98,6 +99,8 @@ export function TokenPurchase() {
   const { address, isConnected } = useAccount()
   const [purchaseAmount, setPurchaseAmount] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  const chainId = useChainId()
 
   // 读取合约基本信息
   const { data: tokenName } = useReadContract({
@@ -242,6 +245,19 @@ export function TokenPurchase() {
       setIsLoading(false)
     }
   }
+    // 环境和连接状态调试
+  useEffect(() => {
+    console.log('Environment check:', {
+      tokenContract: YD_TOKEN_CONTRACT,
+      courseContract: import.meta.env.VITE_COURSE_PLATFORM_ADDRESS,
+      isConnected,
+      address,
+      chainId,
+      expectedChainId: 11155111, // Sepolia
+      isCorrectNetwork: chainId === 11155111,
+      env: import.meta.env.MODE,
+    })
+  }, [isConnected, address, chainId])
 
   // 重置购买状态并刷新余额
   useEffect(() => {

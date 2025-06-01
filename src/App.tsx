@@ -4,7 +4,7 @@ import './App.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RainbowKitProvider, darkTheme, ConnectButton } from '@rainbow-me/rainbowkit'
 
-import { useAccount, useBalance,useConnect, useDisconnect,WagmiProvider } from 'wagmi'
+import { useAccount, useBalance,WagmiProvider } from 'wagmi'
 
 import { config } from './wagmi'
 

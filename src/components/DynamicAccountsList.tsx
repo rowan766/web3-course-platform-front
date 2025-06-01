@@ -6,8 +6,7 @@ import {
   useAccount,
   useReadContract,
   useWriteContract,
-  useWaitForTransactionReceipt,
-  useSwitchAccount
+  useWaitForTransactionReceipt
 } from 'wagmi'
 import { formatEther } from 'viem'
 

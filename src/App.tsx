@@ -3,9 +3,9 @@ import './App.css'
 import { useState } from 'react'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RainbowKitProvider, darkTheme, ConnectButton } from '@rainbow-me/rainbowkit'
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
 
-import { useAccount, useBalance,WagmiProvider } from 'wagmi'
+import {WagmiProvider } from 'wagmi'
 
 import { config } from './wagmi'
 

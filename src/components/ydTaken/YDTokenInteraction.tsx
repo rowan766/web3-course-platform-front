@@ -1,30 +1,21 @@
-// src/components/YDTokenInteraction.tsx
-import React, { useState, useEffect } from 'react'
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useBalance } from 'wagmi'
-import { formatEther, parseEther, formatUnits, parseUnits } from 'viem'
-import './YDTokenInteraction.css'
+import { useState, useEffect } from 'react'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
+import { parseEther, formatEther } from 'viem'
+import './TokenPurchase.css'
 
-// YDToken 合约 ABI
-const YDTOKEN_ABI = [
-  // 基本 ERC20 函数
+// YDToken合约ABI
+const YD_TOKEN_ABI = [
   {
     "inputs": [],
-    "name": "name",
-    "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-    "stateMutability": "view",
+    "name": "buyTokens",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "symbol",
-    "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "decimals",
-    "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}],
+    "name": "tokenPrice",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
     "stateMutability": "view",
     "type": "function"
   },
@@ -43,30 +34,15 @@ const YDTOKEN_ABI = [
     "type": "function"
   },
   {
-    "inputs": [{"internalType": "address", "name": "to", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}],
-    "name": "transfer",
+    "inputs": [],
+    "name": "saleActive",
     "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  // YDToken 特有功能
-  {
-    "inputs": [],
-    "name": "buyTokens",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "tokenAmount", "type": "uint256"}],
-    "name": "sellTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "getTokenPrice",
+    "name": "maxTokensPerTransaction",
     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
     "stateMutability": "view",
     "type": "function"
@@ -87,381 +63,359 @@ const YDTOKEN_ABI = [
   },
   {
     "inputs": [],
-    "name": "saleActive",
-    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "name": "owner",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "maxTokensPerTransaction",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "name": "name",
+    "outputs": [{"internalType": "string", "name": "", "type": "string"}],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "contractETHBalance",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "name": "symbol",
+    "outputs": [{"internalType": "string", "name": "", "type": "string"}],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-    "name": "burn",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "inputs": [],
+    "name": "decimals",
+    "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}],
+    "stateMutability": "view",
     "type": "function"
   }
 ] as const
 
-// 替换为你的合约地址
-const CONTRACT_ADDRESS = import.meta.env.VITE_YD_TOKEN_ADDRESS as `0x${string}`
+// 合约地址 - 请替换为你的实际YDToken合约地址
+const YD_TOKEN_CONTRACT = import.meta.env.VITE_YD_TOKEN_ADDRESS as `0x${string}`
 
-export const YDTokenInteraction: React.FC = () => {
+export function TokenPurchase() {
   const { address, isConnected } = useAccount()
-  const [buyAmount, setBuyAmount] = useState<string>('')
-  const [sellAmount, setSellAmount] = useState<string>('')
-  const [transferTo, setTransferTo] = useState<string>('')
-  const [transferAmount, setTransferAmount] = useState<string>('')
-  const [burnAmount, setBurnAmount] = useState<string>('')
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
+  const [purchaseAmount, setPurchaseAmount] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  // 读取代币基本信息
+  // 读取合约基本信息
   const { data: tokenName } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
     functionName: 'name',
   })
 
   const { data: tokenSymbol } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
     functionName: 'symbol',
   })
 
-  const { data: tokenDecimals } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
-    functionName: 'decimals',
+  const { data: tokenPrice } = useReadContract({
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
+    functionName: 'tokenPrice',
   })
 
   const { data: totalSupply } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
     functionName: 'totalSupply',
   })
 
-  // 读取用户代币余额
-  const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address }
-  })
-
-  // 读取用户 ETH 余额
-  const { data: ethBalance } = useBalance({
-    address: address,
-  })
-
-  // 读取代币价格和销售信息
-  const { data: tokenPrice } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
-    functionName: 'getTokenPrice',
-  })
-
   const { data: saleActive } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
     functionName: 'saleActive',
   })
 
-  const { data: maxTokensPerTx } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
+  const { data: maxTokensPerTransaction } = useReadContract({
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
     functionName: 'maxTokensPerTransaction',
   })
 
-  const { data: contractETHBalance } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
-    functionName: 'contractETHBalance',
+  const { data: ownerAddress } = useReadContract({
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
+    functionName: 'owner',
   })
 
-  // 计算购买代币数量
-  const { data: calculatedTokens } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: YDTOKEN_ABI,
-    functionName: 'calculateTokensFromETH',
-    args: buyAmount ? [parseEther(buyAmount)] : undefined,
-    query: { enabled: !!buyAmount && !isNaN(Number(buyAmount)) }
+  // 读取用户代币余额
+  const { data: userTokenBalance, refetch: refetchUserBalance } = useReadContract({
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
   })
 
-  // 合约写入操作
-  const { writeContract, isPending } = useWriteContract()
+  // 读取可售代币数量（owner的余额）
+  const { data: availableTokens } = useReadContract({
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: ownerAddress ? [ownerAddress] : undefined,
+  })
+
+  // 计算需要的ETH数量
+  const { data: calculatedEthAmount } = useReadContract({
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
+    functionName: 'calculateETHFromTokens',
+    args: purchaseAmount && Number(purchaseAmount) > 0 ? [parseEther(purchaseAmount)] : undefined,
+  })
+
+  // 写入合约
+  const { 
+    writeContract, 
+    data: hash,
+    error,
+    isPending 
+  } = useWriteContract()
 
   // 等待交易确认
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash: txHash,
+    hash,
   })
 
+  // 计算需要的ETH数量
+  const calculateEthAmount = (): string => {
+    if (!calculatedEthAmount) return '0'
+    try {
+      return formatEther(calculatedEthAmount)
+    } catch (error) {
+      console.error('Error calculating ETH amount:', error)
+      return '0'
+    }
+  }
+
+  // 检查购买限制
+  const checkPurchaseLimit = (): boolean => {
+    if (!purchaseAmount || !maxTokensPerTransaction) return true
+    try {
+      const amount = parseEther(purchaseAmount)
+      return amount <= maxTokensPerTransaction
+    } catch (error) {
+      console.error('Error checking purchase limit:', error)
+      return false
+    }
+  }
+
+  // 安全的数字格式化
+  const formatTokenAmount = (amount: bigint | undefined): string => {
+    if (!amount) return '0'
+    try {
+      return Number(formatEther(amount)).toLocaleString()
+    } catch (error) {
+      console.error('Error formatting token amount:', error)
+      return '0'
+    }
+  }
+
   // 购买代币
-  const handleBuyTokens = async () => {
-    if (!buyAmount || !saleActive) return
+  const handlePurchase = async () => {
+    if (!purchaseAmount || !calculatedEthAmount || !isConnected || !saleActive) return
     
+    if (!checkPurchaseLimit()) {
+      const maxAmount = maxTokensPerTransaction ? formatTokenAmount(maxTokensPerTransaction) : '0'
+      alert(`单次购买数量不能超过 ${maxAmount} ${tokenSymbol || 'YD'}`)
+      return
+    }
+
     try {
-      const hash = await writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: YDTOKEN_ABI,
+      setIsLoading(true)
+      
+      writeContract({
+        address: YD_TOKEN_CONTRACT,
+        abi: YD_TOKEN_ABI,
         functionName: 'buyTokens',
-        value: parseEther(buyAmount),
+        value: calculatedEthAmount,
       })
-      setTxHash(hash)
-    } catch (error) {
-      console.error('购买失败:', error)
+    } catch (err) {
+      console.error('Purchase failed:', err)
+      setIsLoading(false)
     }
   }
 
-  // 卖出代币
-  const handleSellTokens = async () => {
-    if (!sellAmount || !saleActive) return
-    
-    try {
-      const hash = await writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: YDTOKEN_ABI,
-        functionName: 'sellTokens',
-        args: [parseUnits(sellAmount, tokenDecimals || 18)],
-      })
-      setTxHash(hash)
-    } catch (error) {
-      console.error('卖出失败:', error)
-    }
-  }
-
-  // 转账代币
-  const handleTransfer = async () => {
-    if (!transferTo || !transferAmount) return
-    
-    try {
-      const hash = await writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: YDTOKEN_ABI,
-        functionName: 'transfer',
-        args: [transferTo as `0x${string}`, parseUnits(transferAmount, tokenDecimals || 18)],
-      })
-      setTxHash(hash)
-    } catch (error) {
-      console.error('转账失败:', error)
-    }
-  }
-
-  // 销毁代币
-  const handleBurn = async () => {
-    if (!burnAmount) return
-    
-    try {
-      const hash = await writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: YDTOKEN_ABI,
-        functionName: 'burn',
-        args: [parseUnits(burnAmount, tokenDecimals || 18)],
-      })
-      setTxHash(hash)
-    } catch (error) {
-      console.error('销毁失败:', error)
-    }
-  }
-
-  // 交易确认后刷新数据
+  // 重置购买状态并刷新余额
   useEffect(() => {
     if (isConfirmed) {
-      refetchTokenBalance()
-      setTxHash(undefined)
-      setBuyAmount('')
-      setSellAmount('')
-      setTransferAmount('')
-      setBurnAmount('')
+      setPurchaseAmount('')
+      setIsLoading(false)
+      // 刷新用户余额
+      setTimeout(() => {
+        refetchUserBalance()
+      }, 2000)
     }
-  }, [isConfirmed, refetchTokenBalance])
+  }, [isConfirmed, refetchUserBalance])
+
+  // 处理输入变化
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    // 只允许数字和小数点
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setPurchaseAmount(value)
+    }
+  }
 
   if (!isConnected) {
     return (
-      <div className="ydtoken-container">
-        <div className="connect-prompt">
-          <h2>🔗 请先连接钱包</h2>
-          <p>连接钱包后即可与 YDToken 合约交互</p>
+      <div className="token-section">
+        <div className="token-info">
+          <div className="connect-prompt-token">
+            <h2>连接钱包购买 {tokenSymbol || 'YD'} 代币</h2>
+            <p>请先连接钱包以查看代币信息和购买</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="ydtoken-container">
-      <div className="ydtoken-header">
-        <h2>🪙 {tokenName} ({tokenSymbol}) 交互界面</h2>
-        <div className="sale-status">
-          销售状态: <span className={saleActive ? 'active' : 'inactive'}>
-            {saleActive ? '🟢 开启中' : '🔴 已关闭'}
-          </span>
-        </div>
-      </div>
-
-      {/* 代币信息展示 */}
-      <div className="info-grid">
-        <div className="info-card">
-          <h3>💰 我的余额</h3>
-          <div className="balance-info">
-            <p><strong>ETH:</strong> {ethBalance ? `${parseFloat(formatEther(ethBalance.value)).toFixed(4)} ETH` : '0 ETH'}</p>
-            <p><strong>{tokenSymbol}:</strong> {tokenBalance ? `${parseFloat(formatUnits(tokenBalance, tokenDecimals || 18)).toFixed(2)} ${tokenSymbol}` : `0 ${tokenSymbol}`}</p>
-          </div>
-        </div>
-
-        <div className="info-card">
-          <h3>📊 代币信息</h3>
-          <div className="token-info">
-            <p><strong>总供应量:</strong> {totalSupply ? `${parseFloat(formatUnits(totalSupply, tokenDecimals || 18)).toLocaleString()} ${tokenSymbol}` : 'Loading...'}</p>
-            <p><strong>当前价格:</strong> {tokenPrice ? `${formatEther(tokenPrice)} ETH` : 'Loading...'}</p>
-            <p><strong>单次限额:</strong> {maxTokensPerTx ? `${parseFloat(formatUnits(maxTokensPerTx, tokenDecimals || 18)).toLocaleString()} ${tokenSymbol}` : 'Loading...'}</p>
-          </div>
-        </div>
-
-        <div className="info-card">
-          <h3>🏦 合约信息</h3>
-          <div className="contract-info">
-            <p><strong>合约 ETH:</strong> {contractETHBalance ? `${formatEther(contractETHBalance)} ETH` : '0 ETH'}</p>
-            <p><strong>地址:</strong> 
-              <a href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`} target="_blank" rel="noopener noreferrer">
-                {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
-              </a>
+    <div className="token-section">
+      <div className="token-info">
+        <div className="token-header">
+          <div className="token-logo">💎</div>
+          <div className="token-details">
+            <h2>{tokenName || 'YD Token'} ({tokenSymbol || 'YD'})</h2>
+            <p className="token-description">
+              高质量的去中心化代币，当前价格 {tokenPrice ? formatEther(tokenPrice) : '0.0004'} ETH
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 功能操作区 */}
-      <div className="actions-grid">
-        {/* 购买代币 */}
-        <div className="action-card">
-          <h3>🛒 购买代币</h3>
-          <div className="action-content">
-            <input
-              type="number"
-              value={buyAmount}
-              onChange={(e) => setBuyAmount(e.target.value)}
-              placeholder="输入 ETH 数量"
-              step="0.01"
-              min="0"
-            />
-            {calculatedTokens && buyAmount && (
-              <p className="calculation">
-                将获得: <strong>{parseFloat(formatUnits(calculatedTokens, tokenDecimals || 18)).toFixed(2)} {tokenSymbol}</strong>
-              </p>
-            )}
-            <button 
-              onClick={handleBuyTokens}
-              disabled={!buyAmount || !saleActive || isPending || isConfirming}
-              className="action-button buy-button"
-            >
-              {isPending ? '发送中...' : isConfirming ? '确认中...' : '购买代币'}
-            </button>
+            <div className="contract-info">
+              <span className="contract-label">合约地址:</span>
+              <span className="contract-address">
+                {YD_TOKEN_CONTRACT.slice(0, 6)}...{YD_TOKEN_CONTRACT.slice(-4)}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* 卖出代币 */}
-        <div className="action-card">
-          <h3>💸 卖出代币</h3>
-          <div className="action-content">
-            <input
-              type="number"
-              value={sellAmount}
-              onChange={(e) => setSellAmount(e.target.value)}
-              placeholder={`输入 ${tokenSymbol} 数量`}
-              step="0.01"
-              min="0"
-            />
-            <button 
-              onClick={handleSellTokens}
-              disabled={!sellAmount || !saleActive || isPending || isConfirming}
-              className="action-button sell-button"
-            >
-              {isPending ? '发送中...' : isConfirming ? '确认中...' : '卖出代币'}
-            </button>
+        {/* 销售状态提示 */}
+        {saleActive === false ? (
+          <div className="sale-inactive">
+            ⚠️ 代币销售当前未激活
+          </div>
+        ) : null}
+        
+        <div className="token-stats">
+          <div className="stat-item">
+            <span className="stat-label">总供应量</span>
+            <span className="stat-value">
+              {totalSupply ? formatTokenAmount(totalSupply) : '加载中...'} {tokenSymbol || 'YD'}
+            </span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">代币价格</span>
+            <span className="stat-value">
+              {tokenPrice ? formatEther(tokenPrice) : '0.0004'} ETH
+            </span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">可购买数量</span>
+            <span className="stat-value">
+              {availableTokens ? formatTokenAmount(availableTokens) : '加载中...'} {tokenSymbol || 'YD'}
+            </span>
           </div>
         </div>
 
-        {/* 转账代币 */}
-        <div className="action-card">
-          <h3>📤 转账代币</h3>
-          <div className="action-content">
-            <input
+        {/* 用户代币余额 */}
+        {userTokenBalance && userTokenBalance > 0n ? (
+          <div className="user-balance">
+            <span className="balance-label">你的 {tokenSymbol || 'YD'} 余额:</span>
+            <span className="balance-value">
+              {formatTokenAmount(userTokenBalance)} {tokenSymbol || 'YD'}
+            </span>
+          </div>
+        ) : null}
+        
+        <div className="purchase-section">
+          <div className="purchase-input">
+            <input 
               type="text"
-              value={transferTo}
-              onChange={(e) => setTransferTo(e.target.value)}
-              placeholder="接收地址"
+              placeholder="输入购买数量" 
+              className="token-input"
+              value={purchaseAmount}
+              onChange={handleInputChange}
+              disabled={isLoading || isPending || isConfirming || !saleActive}
             />
-            <input
-              type="number"
-              value={transferAmount}
-              onChange={(e) => setTransferAmount(e.target.value)}
-              placeholder={`${tokenSymbol} 数量`}
-              step="0.01"
-              min="0"
-            />
-            <button 
-              onClick={handleTransfer}
-              disabled={!transferTo || !transferAmount || isPending || isConfirming}
-              className="action-button transfer-button"
-            >
-              {isPending ? '发送中...' : isConfirming ? '确认中...' : '转账'}
-            </button>
+            <span className="input-suffix">{tokenSymbol || 'YD'}</span>
           </div>
-        </div>
 
-        {/* 销毁代币 */}
-        <div className="action-card">
-          <h3>🔥 销毁代币</h3>
-          <div className="action-content">
-            <input
-              type="number"
-              value={burnAmount}
-              onChange={(e) => setBurnAmount(e.target.value)}
-              placeholder={`销毁 ${tokenSymbol} 数量`}
-              step="0.01"
-              min="0"
-            />
-            <button 
-              onClick={handleBurn}
-              disabled={!burnAmount || isPending || isConfirming}
-              className="action-button burn-button"
-            >
-              {isPending ? '发送中...' : isConfirming ? '确认中...' : '销毁代币'}
-            </button>
-          </div>
+          {/* 购买限制提示 */}
+          {maxTokensPerTransaction ? (
+            <p className="max-purchase-note">
+              单次最大购买量: {formatTokenAmount(maxTokensPerTransaction)} {tokenSymbol || 'YD'}
+            </p>
+          ) : null}
+          
+          <button 
+            className="purchase-button"
+            onClick={handlePurchase}
+            disabled={
+              !purchaseAmount || 
+              Number(purchaseAmount) <= 0 ||
+              !saleActive || 
+              isLoading || 
+              isPending || 
+              isConfirming || 
+              !tokenPrice || 
+              !checkPurchaseLimit()
+            }
+          >
+            {!saleActive ? '销售未激活' :
+             !checkPurchaseLimit() ? '超出购买限制' :
+             isPending ? '确认交易...' : 
+             isConfirming ? '等待确认...' : 
+             isLoading ? '处理中...' : 
+             `用 ETH 购买 ${tokenSymbol || 'YD'}`}
+          </button>
+          
+          <p className="purchase-note">
+            预计消耗: <span className="eth-amount">{calculateEthAmount()} ETH</span>
+          </p>
+
+          {/* 汇率信息 */}
+          {tokenPrice ? (
+            <p className="exchange-rate">
+              汇率: 1 {tokenSymbol || 'YD'} = {formatEther(tokenPrice)} ETH 
+              (比例 1:{Math.round(1 / Number(formatEther(tokenPrice)))})
+            </p>
+          ) : null}
+
+          {error ? (
+            <div className="error-message">
+              购买失败: {
+                error.message.includes('User rejected') ? '用户取消交易' : 
+                error.message.includes('insufficient funds') ? 'ETH余额不足' :
+                error.message.includes('Not enough tokens') ? '可售代币不足' :
+                error.message.includes('Exceeds max tokens') ? '超出单次购买限制' :
+                error.message
+              }
+            </div>
+          ) : null}
+
+          {isConfirmed ? (
+            <div className="success-message">
+              🎉 购买成功！{purchaseAmount} {tokenSymbol || 'YD'} 已到账
+            </div>
+          ) : null}
+
+          {hash ? (
+            <div className="transaction-hash">
+              <span>交易哈希: </span>
+              <a 
+                href={`https://sepolia.etherscan.io/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hash-link"
+              >
+                {hash.slice(0, 10)}...{hash.slice(-8)}
+              </a>
+            </div>
+          ) : null}
         </div>
       </div>
-
-      {/* 交易状态 */}
-      {txHash && (
-        <div className="transaction-status">
-          <h3>📋 交易状态</h3>
-          <p>交易哈希: 
-            <a 
-              href={`https://sepolia.etherscan.io/tx/${txHash}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="tx-link"
-            >
-              {txHash.slice(0, 10)}...{txHash.slice(-8)}
-            </a>
-          </p>
-          {isConfirming && <p className="confirming">⏳ 等待交易确认...</p>}
-          {isConfirmed && <p className="confirmed">✅ 交易已确认!</p>}
-        </div>
-      )}
     </div>
   )
 }

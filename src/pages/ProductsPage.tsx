@@ -1,68 +1,10 @@
-import { useAccount, useBalance } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { TokenPurchase } from '../components/ydTaken/TokenPurchase'
 import './ProductsPage.css'
 import {CoursePlatform} from '../components/course/CoursePlatform'
 
 export function ProductsPage() {
-  const { address, isConnected } = useAccount()
-  const { data: balance } = useBalance({
-    address: address,
-  })
-
-
-  function bfDom(){
-    return (
-              <div className="features">
-              <h2>Available Features</h2>
-              <div className="feature-grid">
-                <div className="feature-card">
-                  <div className="feature-card-content">
-                    <h3><span className="emoji">💸 Send Transactio</span>n</h3>
-                    <p>Send ETH to other addresses</p>
-                    <button className="feature-button">Coming Soon</button>
-                  </div>
-                </div>
-                
-                <div className="feature-card">
-                  <div className="feature-card-content">
-                    <h3> <span className="emoji">📜 Smart Contracts</span></h3>
-                    <p>Interact with smart contracts</p>
-                    <button className="feature-button">Coming Soon</button>
-                  </div>
-                </div>
-                
-                <div className="feature-card">
-                  <div className="feature-card-content">
-                    <h3> <span className="emoji">🏪 DeFi</span></h3>
-                    <p>Decentralized Finance features</p>
-                    <button className="feature-button">Coming Soon</button>
-                  </div>
-                </div>
-                <div className="feature-card">
-                  <div className="feature-card-content">
-                    <h3> <span className="emoji">🎮 NFT Marketplace</span></h3>
-                    <p>Buy and sell NFTs</p>
-                    <button className="feature-button">Coming Soon</button>
-                  </div>
-                </div>
-                <div className="feature-card">
-                  <div className="feature-card-content">
-                    <h3><span className="emoji">📊 Analytics</span></h3>
-                    <p>Portfolio tracking and analytics</p>
-                    <button className="feature-button">Coming Soon</button>
-                  </div>
-                </div>
-                <div className="feature-card">
-                  <div className="feature-card-content">
-                  <h3><span className="emoji">🔗 Cross-chain</span></h3>
-                  <p>Cross-chain bridge functionality</p>
-                  <button className="feature-button">Coming Soon</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-    )
-  }
+  const { isConnected } = useAccount()
 
   return (
       <main className="app-main">

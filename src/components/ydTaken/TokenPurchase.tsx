@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { parseEther, formatEther } from 'viem'
 import './TokenPurchase.css'
 
@@ -92,7 +92,7 @@ const YD_TOKEN_ABI = [
 ] as const
 
 // 合约地址 - 请替换为你的实际YDToken合约地址
-const YD_TOKEN_CONTRACT = import.meta.env.VITE_YD_TOKEN_ADDRESS as `0x${string}` // 替换为你的YD代币合约地址
+const YD_TOKEN_CONTRACT = import.meta.env.VITE_YD_TOKEN_ADDRESS as `0x${string}`
 
 export function TokenPurchase() {
   const { address, isConnected } = useAccount()
@@ -143,7 +143,7 @@ export function TokenPurchase() {
   })
 
   // 读取用户代币余额
-  const { data: userTokenBalance } = useReadContract({
+  const { data: userTokenBalance, refetch: refetchUserBalance } = useReadContract({
     address: YD_TOKEN_CONTRACT,
     abi: YD_TOKEN_ABI,
     functionName: 'balanceOf',
@@ -163,7 +163,7 @@ export function TokenPurchase() {
     address: YD_TOKEN_CONTRACT,
     abi: YD_TOKEN_ABI,
     functionName: 'calculateETHFromTokens',
-    args: purchaseAmount ? [parseEther(purchaseAmount)] : undefined,
+    args: purchaseAmount && Number(purchaseAmount) > 0 ? [parseEther(purchaseAmount)] : undefined,
   })
 
   // 写入合约
@@ -180,19 +180,41 @@ export function TokenPurchase() {
   })
 
   // 计算需要的ETH数量
-  const calculateEthAmount = () => {
+  const calculateEthAmount = (): string => {
     if (!calculatedEthAmount) return '0'
-    return formatEther(calculatedEthAmount)
+    try {
+      return formatEther(calculatedEthAmount)
+    } catch (error) {
+      console.error('Error calculating ETH amount:', error)
+      return '0'
+    }
   }
 
   // 检查购买限制
-  const checkPurchaseLimit = () => {
+  const checkPurchaseLimit = (): boolean => {
     if (!purchaseAmount || !maxTokensPerTransaction) return true
     try {
       const amount = parseEther(purchaseAmount)
-      return amount <= maxTokensPerTransaction
-    } catch {
+      return Number(amount) <= Number(maxTokensPerTransaction)
+    } catch (error) {
+      console.error('Error checking purchase limit:', error)
       return false
+    }
+  }
+
+  // 安全检查用户余额是否大于0
+  const hasTokenBalance = (): boolean => {
+    return Boolean(userTokenBalance && Number(userTokenBalance) > 0)
+  }
+
+  // 安全的数字格式化
+  const formatTokenAmount = (amount: bigint | undefined): string => {
+    if (!amount || amount === 0n) return '0'
+    try {
+      return Number(formatEther(amount)).toLocaleString()
+    } catch (error) {
+      console.error('Error formatting token amount:', error)
+      return '0'
     }
   }
 
@@ -201,7 +223,8 @@ export function TokenPurchase() {
     if (!purchaseAmount || !calculatedEthAmount || !isConnected || !saleActive) return
     
     if (!checkPurchaseLimit()) {
-      alert(`单次购买数量不能超过 ${maxTokensPerTransaction ? formatEther(maxTokensPerTransaction) : '0'} ${tokenSymbol || 'YD'}`)
+      const maxAmount = maxTokensPerTransaction ? formatTokenAmount(maxTokensPerTransaction) : '0'
+      alert(`单次购买数量不能超过 ${maxAmount} ${tokenSymbol || 'YD'}`)
       return
     }
 
@@ -216,18 +239,30 @@ export function TokenPurchase() {
       })
     } catch (err) {
       console.error('Purchase failed:', err)
-    } finally {
       setIsLoading(false)
     }
   }
 
-  // 重置购买状态
+  // 重置购买状态并刷新余额
   useEffect(() => {
     if (isConfirmed) {
       setPurchaseAmount('')
       setIsLoading(false)
+      // 刷新用户余额
+      setTimeout(() => {
+        refetchUserBalance()
+      }, 2000)
     }
-  }, [isConfirmed])
+  }, [isConfirmed, refetchUserBalance])
+
+  // 处理输入变化
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    // 只允许数字和小数点
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setPurchaseAmount(value)
+    }
+  }
 
   if (!isConnected) {
     return (
@@ -262,17 +297,17 @@ export function TokenPurchase() {
         </div>
 
         {/* 销售状态提示 */}
-        {saleActive === false && (
+        {saleActive === false ? (
           <div className="sale-inactive">
             ⚠️ 代币销售当前未激活
           </div>
-        )}
+        ) : null}
         
         <div className="token-stats">
           <div className="stat-item">
             <span className="stat-label">总供应量</span>
             <span className="stat-value">
-              {totalSupply ? Number(formatEther(totalSupply)).toLocaleString() : '加载中...'} {tokenSymbol || 'YD'}
+              {totalSupply ? formatTokenAmount(totalSupply) : '加载中...'} {tokenSymbol || 'YD'}
             </span>
           </div>
           <div className="stat-item">
@@ -284,45 +319,54 @@ export function TokenPurchase() {
           <div className="stat-item">
             <span className="stat-label">可购买数量</span>
             <span className="stat-value">
-              {availableTokens ? Number(formatEther(availableTokens)).toLocaleString() : '加载中...'} {tokenSymbol || 'YD'}
+              {availableTokens ? formatTokenAmount(availableTokens) : '加载中...'} {tokenSymbol || 'YD'}
             </span>
           </div>
         </div>
 
         {/* 用户代币余额 */}
-        {userTokenBalance && BigInt(userTokenBalance.toString()) > 0n && (
+        {hasTokenBalance() ? (
           <div className="user-balance">
             <span className="balance-label">你的 {tokenSymbol || 'YD'} 余额:</span>
             <span className="balance-value">
-              {Number(formatEther(userTokenBalance)).toLocaleString()} {tokenSymbol || 'YD'}
+              {formatTokenAmount(userTokenBalance)} {tokenSymbol || 'YD'}
             </span>
           </div>
-        )}
+        ) : null}
         
         <div className="purchase-section">
           <div className="purchase-input">
             <input 
-              type="number" 
+              type="text"
               placeholder="输入购买数量" 
               className="token-input"
               value={purchaseAmount}
-              onChange={(e) => setPurchaseAmount(e.target.value)}
+              onChange={handleInputChange}
               disabled={isLoading || isPending || isConfirming || !saleActive}
             />
             <span className="input-suffix">{tokenSymbol || 'YD'}</span>
           </div>
 
           {/* 购买限制提示 */}
-          {maxTokensPerTransaction && (
+          {maxTokensPerTransaction ? (
             <p className="max-purchase-note">
-              单次最大购买量: {Number(formatEther(maxTokensPerTransaction)).toLocaleString()} {tokenSymbol || 'YD'}
+              单次最大购买量: {formatTokenAmount(maxTokensPerTransaction)} {tokenSymbol || 'YD'}
             </p>
-          )}
+          ) : null}
           
           <button 
             className="purchase-button"
             onClick={handlePurchase}
-            disabled={!purchaseAmount || !saleActive || isLoading || isPending || isConfirming || !tokenPrice || !checkPurchaseLimit()}
+            disabled={
+              !purchaseAmount || 
+              Number(purchaseAmount) <= 0 ||
+              !saleActive || 
+              isLoading || 
+              isPending || 
+              isConfirming || 
+              !tokenPrice || 
+              !checkPurchaseLimit()
+            }
           >
             {!saleActive ? '销售未激活' :
              !checkPurchaseLimit() ? '超出购买限制' :
@@ -337,29 +381,32 @@ export function TokenPurchase() {
           </p>
 
           {/* 汇率信息 */}
-          {tokenPrice && (
+          {tokenPrice ? (
             <p className="exchange-rate">
-              汇率: 1 {tokenSymbol || 'YD'} = {formatEther(tokenPrice)} ETH (比例 1:{Math.round(1 / Number(formatEther(tokenPrice)))})
+              汇率: 1 {tokenSymbol || 'YD'} = {formatEther(tokenPrice)} ETH 
+              (比例 1:{Math.round(1 / Number(formatEther(tokenPrice)))})
             </p>
-          )}
+          ) : null}
 
-          {error && (
+          {error ? (
             <div className="error-message">
-              购买失败: {error.message.includes('User rejected') ? '用户取消交易' : 
-                        error.message.includes('insufficient funds') ? 'ETH余额不足' :
-                        error.message.includes('Not enough tokens') ? '可售代币不足' :
-                        error.message.includes('Exceeds max tokens') ? '超出单次购买限制' :
-                        error.message}
+              购买失败: {
+                error.message.includes('User rejected') ? '用户取消交易' : 
+                error.message.includes('insufficient funds') ? 'ETH余额不足' :
+                error.message.includes('Not enough tokens') ? '可售代币不足' :
+                error.message.includes('Exceeds max tokens') ? '超出单次购买限制' :
+                error.message
+              }
             </div>
-          )}
+          ) : null}
 
-          {isConfirmed && (
+          {isConfirmed ? (
             <div className="success-message">
               🎉 购买成功！{purchaseAmount} {tokenSymbol || 'YD'} 已到账
             </div>
-          )}
+          ) : null}
 
-          {hash && (
+          {hash ? (
             <div className="transaction-hash">
               <span>交易哈希: </span>
               <a 
@@ -371,7 +418,7 @@ export function TokenPurchase() {
                 {hash.slice(0, 10)}...{hash.slice(-8)}
               </a>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

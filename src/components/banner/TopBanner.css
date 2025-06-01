@@ -1,11 +1,13 @@
 /* TopBanner.css - 添加到你的TopBanner.css文件中 */
 .top-banner {
-  background: linear-gradient(135deg, #1a1b23 0%, #2d2e3f 100%);
-  border-bottom: 1px solid #3a3b4d;
+  background: rgba(30, 27, 75, 0.75);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.3);
   padding: 1rem 0;
   position: sticky;
   top: 0;
   z-index: 100;
+  border-radius: 6px;
 }
 
 .banner-container {

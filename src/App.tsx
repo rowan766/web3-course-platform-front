@@ -19,7 +19,22 @@ import { ProductsPage } from './pages/ProductsPage'
 // 页面类型定义
 type PageType = 'products' | 'profile'
 
+// 🆕 在这里添加自定义RainbowKit主题
+const customRainbowTheme = darkTheme({
+  accentColor: '#4338ca',
+  accentColorForeground: 'white', 
+  borderRadius: 'large',
+  fontStack: 'system',
+  overlayBlur: 'small',
+})
 
+// 覆盖特定样式
+customRainbowTheme.colors.modalBackground = '#1a1b23'
+customRainbowTheme.colors.profileForeground = 'rgba(255, 255, 255, 0.05)'
+customRainbowTheme.colors.selectedOptionBorder = '#8b5cf6'
+customRainbowTheme.radii.modal = '20px'
+customRainbowTheme.radii.menuButton = '25px'
+customRainbowTheme.radii.connectButton = '25px'
                 
 
 
@@ -61,13 +76,7 @@ function App() {
     <WagmiProvider config={config}>
       <QueryClientProvider  client={queryClient}>
         <RainbowKitProvider
-          theme={darkTheme({
-            accentColor: '#7b3bf0',
-            accentColorForeground: 'white',
-            borderRadius: 'medium',
-            fontStack: 'system',
-            overlayBlur: 'small',
-          })}
+          theme={customRainbowTheme}
         >
         <MainContent />
         </RainbowKitProvider>

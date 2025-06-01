@@ -92,7 +92,7 @@ const YD_TOKEN_ABI = [
 ] as const
 
 // 合约地址 - 请替换为你的实际YDToken合约地址
-const YD_TOKEN_CONTRACT = '0x23941b01e2F0fDF214d4d440FB4654C00deBb52D' // 替换为你的合约地址
+const YD_TOKEN_CONTRACT = import.meta.env.VITE_YD_TOKEN_ADDRESS as `0x${string}` // 替换为你的YD代币合约地址
 
 export function TokenPurchase() {
   const { address, isConnected } = useAccount()

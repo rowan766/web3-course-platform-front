@@ -1,6 +1,7 @@
 import { useAccount, useBalance } from 'wagmi'
 import { TokenPurchase } from '../components/ydTaken/TokenPurchase'
 import './ProductsPage.css'
+import {CoursePlatform} from '../components/course/CoursePlatform'
 
 export function ProductsPage() {
   const { address, isConnected } = useAccount()
@@ -13,6 +14,7 @@ export function ProductsPage() {
         {isConnected ? (
           <div className="connected-content"> 
             <TokenPurchase></TokenPurchase>
+            <CoursePlatform></CoursePlatform>
             <div className="features">
               <h2>Available Features</h2>
               <div className="feature-grid">

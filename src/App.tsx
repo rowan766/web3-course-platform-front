@@ -15,9 +15,10 @@ const queryClient = new QueryClient()
 import { TopBanner } from './components/banner/TopBanner'
 import { ProfilePage } from './pages/ProfilePage'
 import { ProductsPage } from './pages/ProductsPage'
+import {CourseAdmin} from './pages/CourseAdmin'
 
 // 页面类型定义
-type PageType = 'products' | 'profile'
+type PageType = 'products' | 'profile'|'admin'
 
 // 🆕 在这里添加自定义RainbowKit主题
 const customRainbowTheme = darkTheme({
@@ -54,18 +55,25 @@ function MainContent() {
     setCurrentPage('profile')
   }
 
+  const handleAdminClick = () => {
+    console.log('点击了管理员')
+    setCurrentPage('admin')
+  }
+
   return (
     <div className="app-container">
       {/* 顶部导航 Banner */}
       <TopBanner 
         onProductClick={handleProductClick}
         onProfileClick={handleProfileClick}
+        onAdminClick={handleAdminClick}
         currentPage={currentPage} // 传递当前页面状态用于高亮显示
       />
       
       {/* 根据当前页面渲染不同内容 */}
       {currentPage === 'products' && <ProductsPage />}
       {currentPage === 'profile' && <ProfilePage />}
+      {currentPage === 'admin' && <CourseAdmin />}
     </div>
   )
 }

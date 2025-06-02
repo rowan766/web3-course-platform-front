@@ -134,6 +134,9 @@ const YD_TOKEN_ABI = [
 const COURSE_PLATFORM_CONTRACT = import.meta.env.VITE_COURSE_PLATFORM_ADDRESS as `0x${string}`
 const YD_TOKEN_CONTRACT = import.meta.env.VITE_YD_TOKEN_ADDRESS as `0x${string}`
 
+// 大额授权金额 - 10万个YD代币，基本够用很久
+const LARGE_APPROVAL_AMOUNT = parseUnits('100000', 18)
+
 interface Course {
   id: bigint
   title: string
@@ -160,14 +163,14 @@ export function CoursePlatform() {
     price: ''
   })
 
-  // 读取所有活跃课程 - 添加刷新间隔
+  // 读取所有活跃课程
   const { data: courses, refetch: refetchCourses } = useReadContract({
     address: COURSE_PLATFORM_CONTRACT,
     abi: COURSE_PLATFORM_ABI,
     functionName: 'getAllActiveCourses',
   })
 
-  // 读取用户购买的课程 - 添加刷新间隔
+  // 读取用户购买的课程
   const { data: userCourses, refetch: refetchUserCourses } = useReadContract({
     address: COURSE_PLATFORM_CONTRACT,
     abi: COURSE_PLATFORM_ABI,
@@ -175,7 +178,7 @@ export function CoursePlatform() {
     args: address ? [address] : undefined,
   })
 
-  // 读取平台统计 - 添加刷新间隔
+  // 读取平台统计
   const { data: platformStats, refetch: refetchPlatformStats } = useReadContract({
     address: COURSE_PLATFORM_CONTRACT,
     abi: COURSE_PLATFORM_ABI,
@@ -200,7 +203,15 @@ export function CoursePlatform() {
   const isOwner = isConnected && address && contractOwner && 
                   address.toLowerCase() === contractOwner.toLowerCase()
 
-  // 授权YD代币
+  // 检查用户授权额度
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: YD_TOKEN_CONTRACT,
+    abi: YD_TOKEN_ABI,
+    functionName: 'allowance',
+    args: address ? [address, COURSE_PLATFORM_CONTRACT] : undefined,
+  })
+
+  // 授权YD代币 - 使用大额授权
   const { 
     writeContract: approveContract, 
     data: approveHash,
@@ -263,14 +274,6 @@ export function CoursePlatform() {
     return userCourses.some((id: bigint) => id === courseId)
   }
 
-  // 检查用户授权额度
-  const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    address: YD_TOKEN_CONTRACT,
-    abi: YD_TOKEN_ABI,
-    functionName: 'allowance',
-    args: address && selectedCourse ? [address, COURSE_PLATFORM_CONTRACT] : undefined,
-  })
-
   // 刷新所有数据
   const refreshAllData = async () => {
     await Promise.all([
@@ -282,18 +285,20 @@ export function CoursePlatform() {
     ])
   }
 
-  // 授权YD代币
+  // 授权YD代币 - 使用大额授权，一次性授权10万个YD
   const handleApprove = async (course: Course) => {
     if (!isConnected) return
     
     try {
       setIsApproving(true)
       setSelectedCourse(course)
+      
+      // 使用大额授权，10万个YD代币，足够买很多课程
       approveContract({
         address: YD_TOKEN_CONTRACT,
         abi: YD_TOKEN_ABI,
         functionName: 'approve',
-        args: [COURSE_PLATFORM_CONTRACT, course.price],
+        args: [COURSE_PLATFORM_CONTRACT, LARGE_APPROVAL_AMOUNT],
       })
     } catch (error) {
       console.error('Approve failed:', error)
@@ -395,6 +400,7 @@ export function CoursePlatform() {
       console.error('Reactivate failed:', error)
     }
   }
+
   // 查看课程内容
   const handleViewContent = async (course: Course) => {
     try {
@@ -451,6 +457,12 @@ export function CoursePlatform() {
     return new Date(Number(timestamp) * 1000).toLocaleDateString()
   }
 
+  // 格式化授权额度显示
+  const formatAllowance = () => {
+    if (!allowance) return '0'
+    return Number(formatUnits(allowance, 18)).toLocaleString()
+  }
+
   // 获取按钮状态和文本
   const getButtonState = (course: Course) => {
     if (!isConnected) return { text: '连接钱包', disabled: false, onClick: () => {} }
@@ -468,9 +480,10 @@ export function CoursePlatform() {
       return { text: 'YD余额不足', disabled: true, onClick: () => {} }
     }
 
+    // 检查授权额度是否足够
     if (!allowance || allowance < course.price) {
       return { 
-        text: isApproving || isApprovePending || isApproveConfirming ? '授权中...' : '授权购买', 
+        text: isApproving || isApprovePending || isApproveConfirming ? '授权中...' : '一键授权', 
         disabled: isApproving || isApprovePending || isApproveConfirming,
         onClick: () => handleApprove(course)
       }
@@ -487,12 +500,40 @@ export function CoursePlatform() {
   useEffect(() => {
     if (isApproveConfirmed && selectedCourse) {
       setIsApproving(false)
+      setSuccessMessage('🎉 授权成功！现在可以购买课程了')
+      
+      // 刷新授权数据
+      refetchAllowance()
+      
       // 授权成功后自动进行购买
       setTimeout(() => {
         handlePurchase(selectedCourse)
-      }, 1000)
+      }, 2000)
+
+      // 3秒后清除成功消息
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 5000)
     }
   }, [isApproveConfirmed, selectedCourse])
+
+  // 处理购买成功
+  useEffect(() => {
+    if (isPurchaseConfirmed) {
+      setSuccessMessage('🎉 课程购买成功！')
+      setSelectedCourse(null)
+      
+      // 购买成功后刷新所有数据
+      setTimeout(() => {
+        refreshAllData()
+      }, 2000)
+
+      // 3秒后清除成功消息
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 3000)
+    }
+  }, [isPurchaseConfirmed])
 
   // 处理更新成功
   useEffect(() => {
@@ -529,22 +570,6 @@ export function CoursePlatform() {
       }, 3000)
     }
   }, [isDeactivateConfirmed, isReactivateConfirmed])
-  useEffect(() => {
-    if (isPurchaseConfirmed) {
-      setSuccessMessage('🎉 课程购买成功！')
-      setSelectedCourse(null)
-      
-      // 购买成功后刷新所有数据
-      setTimeout(() => {
-        refreshAllData()
-      }, 2000)
-
-      // 3秒后清除成功消息
-      setTimeout(() => {
-        setSuccessMessage('')
-      }, 3000)
-    }
-  }, [isPurchaseConfirmed])
 
   if (!isConnected) {
     return (
@@ -578,6 +603,10 @@ export function CoursePlatform() {
             <h3>🪙 我的YD余额</h3>
             <p>{userYDBalance ? formatPrice(userYDBalance) : '0'}</p>
           </div>
+          <div className="stat-card">
+            <h3>🔑 授权额度</h3>
+            <p>{formatAllowance()} YD</p>
+          </div>
         </div>
       )}
 
@@ -585,6 +614,11 @@ export function CoursePlatform() {
       <div className="section-header">
         <h2>可购买课程</h2>
         <p>使用 YD 代币购买优质课程内容</p>
+          {allowance && allowance > 0n ? (
+            <p className="approval-info">
+              💡 你已授权 {formatAllowance()} YD，可以直接购买课程
+            </p>
+          ) : null}
       </div>
 
       {/* 课程列表 */}
@@ -739,6 +773,7 @@ export function CoursePlatform() {
           </div>
         )}
       </div>
+
       {/* 内容查看器 */}
       {viewingContent && (
         <div className="content-viewer-overlay" onClick={() => setViewingContent(null)}>

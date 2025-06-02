@@ -590,7 +590,7 @@ export function CoursePlatform() {
       {/* 课程列表 */}
       <div className="courses-grid">
         {courses && courses.length > 0 ? (
-          courses.map((course: Course) => {
+          [...courses].reverse().map((course: Course) => {
             const isOwned = checkUserOwnsCourse(course.id)
             return (
               <div key={Number(course.id)} className="course-card">
